@@ -1,0 +1,123 @@
+[
+  {
+    "title": "Garlic Chicken Skillet",
+    "url": "https://allrecipes.com/r/1",
+    "cuisine": "American",
+    "protein": "chicken",
+    "ingredients": ["chicken breast", "garlic", "tomato"],
+    "rating": 4.6,
+    "vote_count": 920,
+    "prep_minutes": 30,
+    "healthy": true
+  },
+  {
+    "title": "Italian Beef Tomato Bake",
+    "url": "https://foodnetwork.com/r/2",
+    "cuisine": "Italian",
+    "protein": "beef",
+    "ingredients": ["beef", "tomato", "onion"],
+    "rating": 4.4,
+    "vote_count": 520,
+    "prep_minutes": 40,
+    "healthy": true
+  },
+  {
+    "title": "Pork Tenderloin and Peppers",
+    "url": "https://eatingwell.com/r/3",
+    "cuisine": "Mexican",
+    "protein": "pork",
+    "ingredients": ["pork tenderloin", "bell peppers", "garlic"],
+    "rating": 4.3,
+    "vote_count": 400,
+    "prep_minutes": 35,
+    "healthy": true
+  },
+  {
+    "title": "Turkey Herb Pan Roast",
+    "url": "https://allrecipes.com/r/4",
+    "cuisine": "Mediterranean",
+    "protein": "turkey",
+    "ingredients": ["turkey breast", "tomato", "spinach"],
+    "rating": 4.5,
+    "vote_count": 300,
+    "prep_minutes": 30,
+    "healthy": true
+  },
+  {
+    "title": "Lamb Tomato Braise",
+    "url": "https://epicurious.com/r/5",
+    "cuisine": "Greek",
+    "protein": "lamb",
+    "ingredients": ["lamb", "tomato", "oregano"],
+    "rating": 4.2,
+    "vote_count": 210,
+    "prep_minutes": 45,
+    "healthy": true
+  },
+  {
+    "title": "Weeknight Chicken Pasta",
+    "url": "https://allrecipes.com/r/6",
+    "cuisine": "Italian",
+    "protein": "chicken",
+    "ingredients": ["chicken breast", "whole wheat pasta", "tomato"],
+    "rating": 4.7,
+    "vote_count": 1300,
+    "prep_minutes": 30,
+    "healthy": true
+  },
+  {
+    "title": "Beef and Zucchini Skillet",
+    "url": "https://delish.com/r/7",
+    "cuisine": "American",
+    "protein": "beef",
+    "ingredients": ["beef", "zucchini", "garlic"],
+    "rating": 4.1,
+    "vote_count": 180,
+    "prep_minutes": 25,
+    "healthy": true
+  },
+  {
+    "title": "Pork Chile Verde Lite",
+    "url": "https://foodnetwork.com/r/8",
+    "cuisine": "Mexican",
+    "protein": "pork",
+    "ingredients": ["pork shoulder", "tomatillo", "onion"],
+    "rating": 4.5,
+    "vote_count": 610,
+    "prep_minutes": 40,
+    "healthy": true
+  },
+  {
+    "title": "Turkey Tomato Soup",
+    "url": "https://eatingwell.com/r/9",
+    "cuisine": "American",
+    "protein": "turkey",
+    "ingredients": ["ground turkey", "tomato", "celery"],
+    "rating": 4.4,
+    "vote_count": 340,
+    "prep_minutes": 35,
+    "healthy": true
+  },
+  {
+    "title": "Beef Stuffed Peppers",
+    "url": "https://allrecipes.com/r/10",
+    "cuisine": "Italian",
+    "protein": "beef",
+    "ingredients": ["lean ground beef", "bell peppers", "tomato sauce"],
+    "rating": 4.6,
+    "vote_count": 820,
+    "prep_minutes": 40,
+    "healthy": true
+  },
+  {
+    "title": "Chicken Bean Bowl",
+    "url": "https://allrecipes.com/r/11",
+    "cuisine": "American",
+    "protein": "chicken",
+    "ingredients": ["chicken", "black beans", "rice"],
+    "rating": 4.6,
+    "vote_count": 700,
+    "prep_minutes": 25,
+    "healthy": true
+  }
+]

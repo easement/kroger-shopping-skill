@@ -1,0 +1,7 @@
+[
+  {"name": "chicken", "price_text": "$1.99/lb", "category": "protein"},
+  {"name": "beef", "price_text": "$3.99/lb", "category": "protein"},
+  {"name": "pork", "price_text": "$2.49/lb", "category": "protein"},
+  {"name": "tomato", "price_text": "2 for $4", "category": "produce"},
+  {"name": "bell peppers", "price_text": "3 for $5", "category": "produce"}
+]

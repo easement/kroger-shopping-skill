@@ -1,0 +1,259 @@
+import json
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+
+class RunWeeklyPlanCliTests(unittest.TestCase):
+    def test_cli_returns_ten_meals_from_fixtures(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "10",
+        ]
+
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        payload = json.loads(completed.stdout)
+
+        self.assertEqual(payload["meal_count"], 10)
+        self.assertFalse(payload["used_manual_fallback"])
+        self.assertGreaterEqual(len(payload["meals"]), 10)
+
+    def test_cli_uses_manual_fallback_on_simulated_failure(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--simulate-ad-failure",
+            "--manual-fallback-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "10",
+        ]
+
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        payload = json.loads(completed.stdout)
+
+        self.assertEqual(payload["meal_count"], 10)
+        self.assertTrue(payload["used_manual_fallback"])
+
+    def test_cli_pretty_mode_prints_progress_to_stderr(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "10",
+            "--pretty",
+        ]
+
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        payload = json.loads(completed.stdout)
+
+        self.assertEqual(payload["meal_count"], 10)
+        self.assertIn("[1/5] Preparing adapters", completed.stderr)
+        self.assertIn("[5/5] Done", completed.stderr)
+
+    def test_cli_pretty_summary_includes_exclusion_breakdown(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "10",
+            "--pretty",
+            "--pretty-summary",
+        ]
+
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        payload = json.loads(completed.stdout)
+
+        self.assertIn("summary", payload)
+        self.assertIsNotNone(payload["summary"])
+        self.assertIn("excluded_by_reason", payload["summary"])
+        self.assertIn("excluded_excluded_ingredient", completed.stderr)
+
+    def test_cli_can_save_run_output_to_runs_dir(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cmd = [
+                "python3",
+                "-m",
+                "scripts.run_weekly_plan",
+                "--recipe-fixture",
+                str(root / "fixtures" / "recipes.sample.json"),
+                "--ad-fixture",
+                str(root / "fixtures" / "ad.sample.json"),
+                "--target-count",
+                "10",
+                "--save-run",
+                "--runs-dir",
+                tmp_dir,
+            ]
+            subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+            files = list(Path(tmp_dir).glob("weekly-plan-*.json"))
+            self.assertEqual(len(files), 1)
+            payload = json.loads(files[0].read_text())
+            self.assertEqual(payload["meal_count"], 10)
+
+    def test_cli_requires_recipe_fixture_in_fixture_mode(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--search-mode",
+            "fixture",
+        ]
+        completed = subprocess.run(cmd, capture_output=True, text=True, cwd=root)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("--recipe-fixture is required", completed.stderr + completed.stdout)
+
+    def test_web_mode_can_fallback_to_fixture_when_enabled(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--search-mode",
+            "web",
+            "--web-fallback-to-fixture",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "10",
+        ]
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        payload = json.loads(completed.stdout)
+        self.assertIn("used_recipe_fallback", payload)
+
+    def test_cli_accepts_web_ad_mode_with_simulated_failure(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--ad-mode",
+            "web",
+            "--simulate-ad-failure",
+            "--manual-fallback-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--target-count",
+            "10",
+        ]
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        payload = json.loads(completed.stdout)
+        self.assertTrue(payload["used_manual_fallback"])
+
+    def test_cli_accepts_http_recording_flag(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cmd = [
+                "python3",
+                "-m",
+                "scripts.run_weekly_plan",
+                "--recipe-fixture",
+                str(root / "fixtures" / "recipes.sample.json"),
+                "--ad-fixture",
+                str(root / "fixtures" / "ad.sample.json"),
+                "--record-http-dir",
+                tmp_dir,
+                "--target-count",
+                "10",
+            ]
+            completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["meal_count"], 10)
+
+    def test_cli_record_metadata_writes_jsonl_index(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cmd = [
+                "python3",
+                "-m",
+                "scripts.run_weekly_plan",
+                "--search-mode",
+                "web",
+                "--ad-mode",
+                "web",
+                "--simulate-ad-failure",
+                "--recipe-fixture",
+                str(root / "fixtures" / "recipes.sample.json"),
+                "--manual-fallback-fixture",
+                str(root / "fixtures" / "ad.sample.json"),
+                "--record-http-dir",
+                tmp_dir,
+                "--record-metadata",
+                "--target-count",
+                "10",
+            ]
+            subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+            metadata_file = Path(tmp_dir) / "captures.jsonl"
+            self.assertTrue(metadata_file.exists())
+
+    def test_cli_meal_lines_output_format(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "3",
+            "--output-format",
+            "meal-lines",
+        ]
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        self.assertIn("Weeknight Chicken Pasta(allrecipes - 4.7)", completed.stdout)
+        self.assertIn("https://allrecipes.com/r/6", completed.stdout)
+
+    def test_cli_meal_markdown_output_format(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "2",
+            "--output-format",
+            "meal-markdown",
+        ]
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        self.assertIn("- [", completed.stdout)
+        self.assertIn("](https://", completed.stdout)
+
+
+if __name__ == "__main__":
+    unittest.main()
