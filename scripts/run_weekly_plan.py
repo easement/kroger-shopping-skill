@@ -45,20 +45,56 @@ def _pretty_site_name(url: str) -> str:
     return base.replace("-", " ").replace("_", " ").strip()
 
 
+def _build_sale_price_lookup(result: object) -> dict[str, str]:
+    sale_items = getattr(getattr(result, "ad_context", None), "sale_items", ()) or ()
+    lookup: dict[str, str] = {}
+    for item in sale_items:
+        name = str(getattr(item, "name", "")).strip()
+        price = str(getattr(item, "price_text", "")).strip()
+        if not name or not price:
+            continue
+        lookup[name.lower()] = price
+    return lookup
+
+
+def _meal_prefix_and_price(result: object, item: object, sale_price_lookup: dict[str, str]) -> tuple[str, str]:
+    matches = list(getattr(item.candidate, "sale_item_matches", ()) or ())
+    if matches:
+        main = str(matches[0]).strip()
+        if main:
+            price = sale_price_lookup.get(main.lower(), "N/A")
+            return main.title(), price
+
+    protein = str(getattr(item.candidate, "protein", "")).strip()
+    if protein:
+        # Try to find a sale item containing the protein token.
+        protein_lower = protein.lower()
+        for sale_name, sale_price in sale_price_lookup.items():
+            if protein_lower in sale_name:
+                return protein.title(), sale_price
+        return protein.title(), "N/A"
+
+    return "Unknown", "N/A"
+
+
 def _format_meal_plain_lines(result: object) -> str:
+    sale_price_lookup = _build_sale_price_lookup(result)
     lines: list[str] = []
     for item in result.meals:
         site = _pretty_site_name(item.candidate.url)
-        lines.append(f"{item.candidate.title}({site} - {item.candidate.rating:.1f})")
+        main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
+        lines.append(f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}")
         lines.append(item.candidate.url)
     return "\n".join(lines)
 
 
 def _format_meal_markdown_lines(result: object) -> str:
+    sale_price_lookup = _build_sale_price_lookup(result)
     lines: list[str] = []
     for item in result.meals:
         site = _pretty_site_name(item.candidate.url)
-        label = f"{item.candidate.title}({site} - {item.candidate.rating:.1f})"
+        main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
+        label = f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}"
         lines.append(f"- [{label}]({item.candidate.url})")
     return "\n".join(lines)
 
