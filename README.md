@@ -104,8 +104,10 @@ The current implementation includes:
 - `fixtures/kroger_extra_headers.template.json` is a sanitized starting point for local header capture; keep populated `*.live.json` files local only.
 - Live recipe refresh supports Playwright browser fetches and multi-seed discovery (including pork/beef/turkey/ham/pasta/seafood).
 - Recipe refresh writes `fixtures/recipes.live.json`, excludes last-week URLs from `fixtures/recipes.last-week.json`, and can backfill when novelty is exhausted.
+- Each recipe search run randomly samples 7 trusted domains (non-persistent); selected domains are reported in `adapter_stats.recipe_web.selected_domains`.
 - Planner can then run against current weekly deals/recipes using fixture mode for stable weekly execution.
 - Web/Playwright recipe search reports detailed diagnostics (`adapter_stats.recipe_web`) including page fetch failures and parse outcomes.
+- Trusted recipe domains now include additional sources such as Pinch of Yum, Cookie and Kate, Love and Lemons, Serious Eats, Budget Bytes, Smitten Kitchen, Minimalist Baker, Half Baked Harvest, Sally's Baking Addiction, Damn Delicious, The Pioneer Woman, Skinnytaste, Simply Recipes, Gimme Some Oven, Natasha's Kitchen, Jo Cooks, and Food52.
 
 ## Project Structure
 

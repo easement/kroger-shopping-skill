@@ -171,6 +171,25 @@ class WebRecipeSearchTests(unittest.TestCase):
         self.assertEqual(docs[0].title, "Playwright Recipe")
         self.assertEqual(adapter.last_stats["pages_parsed"], 1)
 
+    def test_search_selects_up_to_configured_random_domains(self) -> None:
+        rss_empty = "<rss><channel></channel></rss>"
+
+        def fake_fetch(url: str) -> str:
+            return rss_empty
+
+        adapter = WebRecipeSearchAdapter(
+            config=WebSearchConfig(
+                random_domain_count=2,
+                use_relaxed_query_fallback=False,
+                trusted_domains=("allrecipes.com", "foodnetwork.com", "eatingwell.com"),
+            ),
+            fetch_text=fake_fetch,
+        )
+        adapter.search((SaleItem(name="chicken", price_text="$1.99", category="protein"),))
+        selected_domains = adapter.last_stats.get("selected_domains") or []
+        self.assertEqual(len(selected_domains), 2)
+        self.assertTrue(set(selected_domains).issubset({"allrecipes.com", "foodnetwork.com", "eatingwell.com"}))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import html
 import json
 import os
+import random
 import re
 import subprocess
 from typing import Callable
@@ -179,6 +180,7 @@ def _parse_recipe_json_ld(payload: object, url: str) -> RecipeDocument | None:
 @dataclass(frozen=True)
 class WebSearchConfig:
     max_links: int = 20
+    random_domain_count: int = 7
     use_relaxed_query_fallback: bool = True
     trusted_domains: tuple[str, ...] = (
         "allrecipes.com",
@@ -186,6 +188,23 @@ class WebSearchConfig:
         "eatingwell.com",
         "delish.com",
         "epicurious.com",
+        "pinchofyum.com",
+        "cookieandkate.com",
+        "loveandlemons.com",
+        "seriouseats.com",
+        "budgetbytes.com",
+        "smittenkitchen.com",
+        "minimalistbaker.com",
+        "halfbakedharvest.com",
+        "sallysbakingaddiction.com",
+        "damndelicious.net",
+        "thepioneerwoman.com",
+        "skinnytaste.com",
+        "simplyrecipes.com",
+        "gimmesomeoven.com",
+        "natashaskitchen.com",
+        "jocooks.com",
+        "food52.com",
     )
     allowed_path_tokens: tuple[str, ...] = (
         "/r/",
@@ -211,6 +230,7 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         self._fetch_text = fetch_text or default_fetch_text
         self.last_stats: dict[str, object] = {
             "used_relaxed_query": False,
+            "selected_domains": [],
             "rss_queries": 0,
             "raw_links": 0,
             "allowed_links": 0,
@@ -333,8 +353,16 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         return None
 
     def search(self, sale_items: tuple[SaleItem, ...]) -> list[RecipeDocument]:
+        all_domains = list(self._config.trusted_domains)
+        domain_count = max(1, int(self._config.random_domain_count))
+        if len(all_domains) <= domain_count:
+            selected_domains = all_domains
+        else:
+            selected_domains = random.sample(all_domains, domain_count)
+
         self.last_stats = {
             "used_relaxed_query": False,
+            "selected_domains": selected_domains,
             "rss_queries": 0,
             "raw_links": 0,
             "allowed_links": 0,
@@ -353,7 +381,7 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         links: list[str] = []
 
         # Strict per-domain pass
-        for domain in self._config.trusted_domains:
+        for domain in selected_domains:
             remaining = self._config.max_links - len(links)
             if remaining <= 0:
                 break
@@ -363,7 +391,7 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         # Relaxed fallback if strict pass produced nothing
         if not links and self._config.use_relaxed_query_fallback:
             self.last_stats["used_relaxed_query"] = True
-            for domain in self._config.trusted_domains:
+            for domain in selected_domains:
                 remaining = self._config.max_links - len(links)
                 if remaining <= 0:
                     break

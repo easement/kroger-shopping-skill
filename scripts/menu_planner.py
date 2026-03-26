@@ -35,6 +35,23 @@ TRUSTED_SOURCES = {
     "eatingwell.com",
     "delish.com",
     "epicurious.com",
+    "pinchofyum.com",
+    "cookieandkate.com",
+    "loveandlemons.com",
+    "seriouseats.com",
+    "budgetbytes.com",
+    "smittenkitchen.com",
+    "minimalistbaker.com",
+    "halfbakedharvest.com",
+    "sallysbakingaddiction.com",
+    "damndelicious.net",
+    "thepioneerwoman.com",
+    "skinnytaste.com",
+    "simplyrecipes.com",
+    "gimmesomeoven.com",
+    "natashaskitchen.com",
+    "jocooks.com",
+    "food52.com",
 }
 
 
