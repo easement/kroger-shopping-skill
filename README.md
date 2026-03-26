@@ -118,6 +118,49 @@ The current implementation includes:
 - `grocery-weekly-menu-skill/tests/` - unit/integration tests
 - `grocery-weekly-menu-skill/fixtures/` - sample ad/recipe fixture data
 
+## Code Flow
+
+The weekly pipeline runs in three stages: refresh deals, refresh recipes, then plan meals.
+
+```mermaid
+flowchart TD
+    A[Export Kroger shoppable-weekly-deals JSON] --> B[refresh_live_deals_fixture.py]
+    B --> C[fixtures/ad.live.from-deals.json]
+    D[refresh_live_recipes_fixture.py] --> E[fixtures/recipes.live.json]
+    C --> F[run_weekly_plan.py]
+    E --> F
+    F --> G[Candidate generation + sale-item matching]
+    G --> H[Eligibility filters<br/>healthy/easy/no asian/no beans/no fennel]
+    H --> I[Scoring<br/>rating + vote_count + sale boosts]
+    I --> J[Diversity enforcement<br/>protein/cuisine/source caps]
+    J --> K[Output formatting<br/>json/meal-lines/meal-markdown]
+```
+
+### Main Script Responsibilities
+
+- `scripts.refresh_live_deals_fixture.py`
+  - reads browser-exported `live-deals.json`
+  - extracts sale item names + price text
+  - writes normalized deals fixture at `fixtures/ad.live.from-deals.json`
+- `scripts.refresh_live_recipes_fixture.py`
+  - runs multi-batch recipe discovery (`web` or `playwright`)
+  - parses JSON-LD recipe data and writes `fixtures/recipes.live.json`
+  - excludes last-week URLs using `fixtures/recipes.last-week.json`
+- `scripts.run_weekly_plan.py`
+  - loads ad + recipe fixtures (or live adapters)
+  - builds candidates via `documents_to_candidates(...)`
+  - runs planner (`plan_weekly_menu_with_diagnostics(...)`)
+  - renders final output format (`json`, `meal-lines`, `meal-markdown`)
+
+### Data Contract (High Level)
+
+- Ad fixture item shape:
+  - `{ "name": "<sale item>", "price_text": "<promo price>", "category": "..." }`
+- Recipe fixture item shape:
+  - `{ "title": "...", "url": "...", "cuisine": "...", "protein": "...", "ingredients": [...], "rating": 4.5, "vote_count": 120, "prep_minutes": 30, "healthy": true }`
+- Planner output meal shape:
+  - `{ "title": "...", "url": "...", "rating": 4.5, "vote_count": 120, "score": 1.23, "cuisine": "...", "protein": "...", "sale_item_matches": [...] }`
+
 ## Prerequisites
 
 - Python 3.10+ (the project currently runs with `python3`)
