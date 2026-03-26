@@ -6,6 +6,74 @@ from pathlib import Path
 
 
 class RunWeeklyPlanCliTests(unittest.TestCase):
+    def test_cli_replay_captures_dir_returns_stats(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            captures_root = Path(tmp_dir)
+            (captures_root / "ad").mkdir(parents=True, exist_ok=True)
+            (captures_root / "recipe").mkdir(parents=True, exist_ok=True)
+            (captures_root / "ad" / "ad1.txt").write_text("Chicken Breast - $1.99/lb")
+            (captures_root / "recipe" / "r1.txt").write_text(
+                """
+                <script type="application/ld+json">
+                {"@context":"https://schema.org","@type":"Recipe","name":"Replay",
+                "recipeCuisine":"American","recipeIngredient":["beef"],
+                "aggregateRating":{"ratingValue":"4.2","ratingCount":"80"}}
+                </script>
+                """
+            )
+            cmd = [
+                "python3",
+                "-m",
+                "scripts.run_weekly_plan",
+                "--replay-captures-dir",
+                str(captures_root),
+            ]
+            completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+            payload = json.loads(completed.stdout)
+            self.assertTrue(payload["replay_only"])
+            self.assertEqual(payload["ad"]["files_scanned"], 1)
+            self.assertEqual(payload["recipe"]["files_scanned"], 1)
+            self.assertIn("files_with_non_recipe_jsonld", payload["recipe"])
+
+    def test_cli_validate_only_succeeds_with_fixture_inputs(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--validate-only",
+            "--search-mode",
+            "fixture",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+        ]
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["status"], "ok")
+        self.assertTrue(payload["validate_only"])
+
+    def test_cli_validate_only_fails_with_invalid_recipe_fixture(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            invalid_fixture = Path(tmp_dir) / "invalid.json"
+            invalid_fixture.write_text(json.dumps({"bad": "shape"}))
+            cmd = [
+                "python3",
+                "-m",
+                "scripts.run_weekly_plan",
+                "--validate-only",
+                "--search-mode",
+                "fixture",
+                "--recipe-fixture",
+                str(invalid_fixture),
+            ]
+            completed = subprocess.run(cmd, capture_output=True, text=True, cwd=root)
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("Recipe fixture must be a JSON list", completed.stderr + completed.stdout)
+
     def test_cli_returns_ten_meals_from_fixtures(self) -> None:
         root = Path(__file__).resolve().parents[1]
         cmd = [
@@ -26,6 +94,7 @@ class RunWeeklyPlanCliTests(unittest.TestCase):
         self.assertEqual(payload["meal_count"], 10)
         self.assertFalse(payload["used_manual_fallback"])
         self.assertGreaterEqual(len(payload["meals"]), 10)
+        self.assertIn("diagnostics", payload)
 
     def test_cli_uses_manual_fallback_on_simulated_failure(self) -> None:
         root = Path(__file__).resolve().parents[1]
@@ -253,6 +322,76 @@ class RunWeeklyPlanCliTests(unittest.TestCase):
         completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
         self.assertIn("- [", completed.stdout)
         self.assertIn("](https://", completed.stdout)
+
+    def test_cli_accepts_custom_planner_config(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "planner.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "min_rating": 4.5,
+                        "max_prep_minutes": 45,
+                        "max_per_protein": 3,
+                        "max_per_cuisine": 4,
+                        "min_trusted_ratio": 0.3,
+                    }
+                )
+            )
+            cmd = [
+                "python3",
+                "-m",
+                "scripts.run_weekly_plan",
+                "--recipe-fixture",
+                str(root / "fixtures" / "recipes.sample.json"),
+                "--ad-fixture",
+                str(root / "fixtures" / "ad.sample.json"),
+                "--planner-config",
+                str(config_path),
+                "--target-count",
+                "10",
+            ]
+            completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+            payload = json.loads(completed.stdout)
+            self.assertIn("diagnostics", payload)
+
+    def test_cli_quality_gate_passes_with_default_fixture(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "10",
+            "--quality-gate",
+        ]
+        completed = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["meal_count"], 10)
+
+    def test_cli_quality_gate_fails_when_thresholds_too_strict(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        cmd = [
+            "python3",
+            "-m",
+            "scripts.run_weekly_plan",
+            "--recipe-fixture",
+            str(root / "fixtures" / "recipes.sample.json"),
+            "--ad-fixture",
+            str(root / "fixtures" / "ad.sample.json"),
+            "--target-count",
+            "10",
+            "--quality-gate",
+            "--quality-min-meals",
+            "11",
+        ]
+        completed = subprocess.run(cmd, capture_output=True, text=True, cwd=root)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("quality_gate_failed", completed.stderr + completed.stdout)
 
 
 if __name__ == "__main__":

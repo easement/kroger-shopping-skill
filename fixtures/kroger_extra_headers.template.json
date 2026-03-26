@@ -1,0 +1,52 @@
+{
+  "x-call-origin": {
+    "component": "weekly ad",
+    "page": "weekly ad"
+  },
+  "x-dtpc": "REPLACE_WITH_BROWSER_VALUE",
+  "x-facility-id": "01100459",
+  "x-geo-location-v1": {
+    "id": "REPLACE_WITH_BROWSER_VALUE",
+    "proxyStore": "REPLACE_WITH_BROWSER_VALUE"
+  },
+  "x-kroger-channel": "WEB",
+  "x-laf-object": [
+    {
+      "modality": {
+        "type": "PICKUP",
+        "handoffLocation": {
+          "storeId": "REPLACE_WITH_STORE_ID",
+          "facilityId": "REPLACE_WITH_FACILITY_ID"
+        },
+        "handoffAddress": {
+          "address": {
+            "addressLines": ["REPLACE_WITH_STORE_ADDRESS"],
+            "cityTown": "REPLACE_WITH_CITY",
+            "name": "REPLACE_WITH_STORE_NAME",
+            "postalCode": "REPLACE_WITH_POSTAL_CODE",
+            "stateProvince": "REPLACE_WITH_STATE",
+            "residential": false,
+            "countryCode": "US"
+          },
+          "location": {
+            "lat": 0,
+            "lng": 0
+          }
+        },
+        "sources": [
+          {
+            "storeId": "REPLACE_WITH_STORE_ID",
+            "facilityId": "REPLACE_WITH_FACILITY_ID"
+          }
+        ],
+        "assortmentKeys": ["REPLACE_WITH_ASSORTMENT_KEY"],
+        "listingKeys": ["REPLACE_WITH_LISTING_KEY"]
+      }
+    }
+  ],
+  "x-modality": {
+    "type": "PICKUP",
+    "locationId": "01100459"
+  },
+  "x-modality-type": "PICKUP"
+}

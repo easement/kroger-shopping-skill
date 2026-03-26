@@ -1,0 +1,7 @@
+{
+  "min_rating": 4.0,
+  "max_prep_minutes": 45,
+  "max_per_protein": 3,
+  "max_per_cuisine": 4,
+  "min_trusted_ratio": 0.3
+}

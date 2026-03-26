@@ -89,17 +89,38 @@ class JsonFixtureRecipeSearchAdapter:
     def __init__(self, fixture_path: str) -> None:
         self._fixture_path = Path(fixture_path)
 
+    def _validate_item(self, item: object, index: int) -> dict[str, object]:
+        if not isinstance(item, dict):
+            raise ValueError(f"Recipe fixture item at index {index} must be an object")
+        required_fields = [
+            "title",
+            "url",
+            "cuisine",
+            "protein",
+            "rating",
+            "vote_count",
+            "prep_minutes",
+            "healthy",
+        ]
+        missing = [field for field in required_fields if field not in item]
+        if missing:
+            raise ValueError(f"Recipe fixture item at index {index} missing fields: {missing}")
+        return item
+
     def search(self, sale_items: tuple[SaleItem, ...]) -> list[RecipeDocument]:
         payload = json.loads(self._fixture_path.read_text())
+        if not isinstance(payload, list):
+            raise ValueError("Recipe fixture must be a JSON list")
         docs: list[RecipeDocument] = []
 
-        for item in payload:
+        for index, raw_item in enumerate(payload):
+            item = self._validate_item(raw_item, index)
             docs.append(
                 RecipeDocument(
-                    title=item["title"],
-                    url=item["url"],
-                    cuisine=item["cuisine"],
-                    protein=item["protein"],
+                    title=str(item["title"]),
+                    url=str(item["url"]),
+                    cuisine=str(item["cuisine"]),
+                    protein=str(item["protein"]),
                     ingredients=tuple(item.get("ingredients", [])),
                     rating=float(item["rating"]),
                     vote_count=int(item["vote_count"]),

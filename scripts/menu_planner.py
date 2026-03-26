@@ -66,6 +66,25 @@ class EligibilityResult:
     reason: str
 
 
+@dataclass(frozen=True)
+class PlannerConfig:
+    min_rating: float = 4.0
+    max_prep_minutes: int = 45
+    max_per_protein: int = 3
+    max_per_cuisine: int = 4
+    min_trusted_ratio: float = 0.3
+
+
+@dataclass(frozen=True)
+class PlanningDiagnostics:
+    total_candidates: int
+    eligible_candidates: int
+    selected_meals: int
+    trusted_selected: int
+    trusted_ratio: float
+    insufficient_reason: str | None
+
+
 def _normalize(text: str) -> str:
     return text.strip().lower()
 
@@ -80,12 +99,13 @@ def _is_excluded_cuisine(cuisine: str) -> bool:
     return any(token in normalized_cuisine for token in EXCLUDED_CUISINE_TOKENS)
 
 
-def _is_easy(prep_minutes: int) -> bool:
-    return prep_minutes <= 45
+def _is_easy(prep_minutes: int, config: PlannerConfig) -> bool:
+    return prep_minutes <= config.max_prep_minutes
 
 
-def check_eligibility(candidate: RecipeCandidate) -> EligibilityResult:
-    if candidate.rating < 4.0:
+def check_eligibility(candidate: RecipeCandidate, config: PlannerConfig | None = None) -> EligibilityResult:
+    active_config = config or PlannerConfig()
+    if candidate.rating < active_config.min_rating:
         return EligibilityResult(eligible=False, reason="rating_below_threshold")
 
     if candidate.vote_count <= 0:
@@ -94,7 +114,7 @@ def check_eligibility(candidate: RecipeCandidate) -> EligibilityResult:
     if not candidate.healthy:
         return EligibilityResult(eligible=False, reason="not_healthy")
 
-    if not _is_easy(candidate.prep_minutes):
+    if not _is_easy(candidate.prep_minutes, active_config):
         return EligibilityResult(eligible=False, reason="not_easy")
 
     if _is_excluded_cuisine(candidate.cuisine):
@@ -136,15 +156,20 @@ def _sort_ranked(recipes: list[RankedRecipe]) -> list[RankedRecipe]:
     )
 
 
-def enforce_diversity(sorted_ranked: list[RankedRecipe], target_count: int = 10) -> list[RankedRecipe]:
+def enforce_diversity(
+    sorted_ranked: list[RankedRecipe],
+    target_count: int = 10,
+    config: PlannerConfig | None = None,
+) -> list[RankedRecipe]:
+    active_config = config or PlannerConfig()
     if target_count <= 0:
         return []
 
     selected: list[RankedRecipe] = []
     by_protein: dict[str, int] = {}
     by_cuisine: dict[str, int] = {}
-    max_per_protein = 3
-    max_per_cuisine = 4
+    max_per_protein = active_config.max_per_protein
+    max_per_cuisine = active_config.max_per_cuisine
 
     for ranked in sorted_ranked:
         if len(selected) >= target_count:
@@ -176,8 +201,36 @@ def enforce_diversity(sorted_ranked: list[RankedRecipe], target_count: int = 10)
     return selected
 
 
-def plan_weekly_menu(candidates: list[RecipeCandidate], target_count: int = 10) -> list[RankedRecipe]:
-    eligible = [candidate for candidate in candidates if is_eligible(candidate)]
+def plan_weekly_menu_with_diagnostics(
+    candidates: list[RecipeCandidate],
+    target_count: int = 10,
+    config: PlannerConfig | None = None,
+) -> tuple[list[RankedRecipe], PlanningDiagnostics]:
+    active_config = config or PlannerConfig()
+    eligible = [candidate for candidate in candidates if check_eligibility(candidate, active_config).eligible]
     ranked = [score_candidate(candidate) for candidate in eligible]
     sorted_ranked = _sort_ranked(ranked)
-    return enforce_diversity(sorted_ranked=sorted_ranked, target_count=target_count)
+    selected = enforce_diversity(sorted_ranked=sorted_ranked, target_count=target_count, config=active_config)
+
+    trusted_selected = len([entry for entry in selected if entry.trusted_source])
+    trusted_ratio = trusted_selected / len(selected) if selected else 0.0
+    insufficient_reason = None
+    if len(selected) < target_count:
+        insufficient_reason = "insufficient_eligible_candidates"
+    elif trusted_ratio < active_config.min_trusted_ratio:
+        insufficient_reason = "low_trusted_source_ratio"
+
+    diagnostics = PlanningDiagnostics(
+        total_candidates=len(candidates),
+        eligible_candidates=len(eligible),
+        selected_meals=len(selected),
+        trusted_selected=trusted_selected,
+        trusted_ratio=trusted_ratio,
+        insufficient_reason=insufficient_reason,
+    )
+    return selected, diagnostics
+
+
+def plan_weekly_menu(candidates: list[RecipeCandidate], target_count: int = 10) -> list[RankedRecipe]:
+    selected, _ = plan_weekly_menu_with_diagnostics(candidates=candidates, target_count=target_count)
+    return selected

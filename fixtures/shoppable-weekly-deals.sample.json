@@ -1,0 +1,26 @@
+{
+  "data": {
+    "shoppableWeeklyDeals": {
+      "divisionCode": "011",
+      "storeId": "00459",
+      "ads": [
+        {
+          "mainlineCopy": "Kroger 85% Lean Ground Beef",
+          "underlineCopy": "16 oz Package",
+          "salePrice": null,
+          "retailPrice": 5.99
+        },
+        {
+          "mainlineCopy": "Chicken Breast",
+          "underlineCopy": "2 lb Package",
+          "salePrice": 1.99,
+          "retailPrice": 3.99
+        }
+      ]
+    }
+  },
+  "meta": {
+    "shoppableWeeklyDeals": {}
+  }
+}
+

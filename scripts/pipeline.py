@@ -8,7 +8,12 @@ from scripts.ad_capture import (
     AdCaptureResult,
     build_manual_fallback_result,
 )
-from scripts.menu_planner import RankedRecipe, plan_weekly_menu
+from scripts.menu_planner import (
+    PlannerConfig,
+    PlanningDiagnostics,
+    RankedRecipe,
+    plan_weekly_menu_with_diagnostics,
+)
 from scripts.recipe_search import RecipeDocument, RecipeSearchAdapter, documents_to_candidates
 
 
@@ -17,6 +22,7 @@ class PipelineResult:
     meals: tuple[RankedRecipe, ...]
     ad_context: AdCaptureResult
     used_manual_fallback: bool
+    diagnostics: PlanningDiagnostics | None = None
 
 
 def run_menu_pipeline(
@@ -26,6 +32,7 @@ def run_menu_pipeline(
     location_id: str = DEFAULT_LOCATION_ID,
     manual_fallback_items: list[dict[str, str]] | None = None,
     target_count: int = 10,
+    planner_config: PlannerConfig | None = None,
 ) -> PipelineResult:
     ad_context = ad_adapter.capture_weekly_ad(location_id=location_id)
     used_manual_fallback = False
@@ -45,11 +52,16 @@ def run_menu_pipeline(
         used_manual_fallback = True
 
     candidates = documents_to_candidates(docs=recipe_docs, sale_items=ad_context.sale_items)
-    planned = plan_weekly_menu(candidates=candidates, target_count=target_count)
+    planned, diagnostics = plan_weekly_menu_with_diagnostics(
+        candidates=candidates,
+        target_count=target_count,
+        config=planner_config,
+    )
     return PipelineResult(
         meals=tuple(planned),
         ad_context=ad_context,
         used_manual_fallback=used_manual_fallback,
+        diagnostics=diagnostics,
     )
 
 
@@ -60,6 +72,7 @@ def run_menu_pipeline_with_search(
     location_id: str = DEFAULT_LOCATION_ID,
     manual_fallback_items: list[dict[str, str]] | None = None,
     target_count: int = 10,
+    planner_config: PlannerConfig | None = None,
 ) -> PipelineResult:
     ad_context = ad_adapter.capture_weekly_ad(location_id=location_id)
     used_manual_fallback = False
@@ -80,10 +93,15 @@ def run_menu_pipeline_with_search(
 
     recipe_docs = recipe_search_adapter.search(ad_context.sale_items)
     candidates = documents_to_candidates(docs=recipe_docs, sale_items=ad_context.sale_items)
-    planned = plan_weekly_menu(candidates=candidates, target_count=target_count)
+    planned, diagnostics = plan_weekly_menu_with_diagnostics(
+        candidates=candidates,
+        target_count=target_count,
+        config=planner_config,
+    )
 
     return PipelineResult(
         meals=tuple(planned),
         ad_context=ad_context,
         used_manual_fallback=used_manual_fallback,
+        diagnostics=diagnostics,
     )

@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import html
 import json
+import os
 import re
+import subprocess
 from typing import Callable
-from urllib.parse import quote_plus
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote_plus, urlparse
 from urllib.request import Request, urlopen
 
 from scripts.ad_capture import SaleItem
@@ -12,24 +16,84 @@ from scripts.recipe_search import RecipeDocument, RecipeSearchAdapter
 
 
 FetchText = Callable[[str], str]
+PlaywrightFetchText = Callable[[str], str]
 
-USER_AGENT = "Mozilla/5.0 (compatible; GroceryWeeklyMenuSkill/1.0)"
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/122.0.0.0 Safari/537.36"
+)
 
 
 def default_fetch_text(url: str) -> str:
-    request = Request(url, headers={"User-Agent": USER_AGENT})
+    request = Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "en-US,en;q=0.9",
+        },
+    )
     with urlopen(request, timeout=12) as response:  # noqa: S310
         return response.read().decode("utf-8", errors="ignore")
+
+
+def default_playwright_fetch_text(url: str) -> str:
+    script = r"""
+const { chromium } = require('playwright')
+
+async function main() {
+  const targetUrl = process.env.RECIPE_TARGET_URL || ''
+  const browser = await chromium.launch({ headless: true, args: ['--disable-http2'] })
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 60000 })
+  await page.waitForTimeout(1000)
+  const html = await page.content()
+  await browser.close()
+  process.stdout.write(html)
+}
+
+main().catch((error) => {
+  process.stderr.write(String(error))
+  process.exit(1)
+})
+"""
+    completed = subprocess.run(
+        ["node", "-e", script],
+        env={**dict(os.environ), "RECIPE_TARGET_URL": url},
+        capture_output=True,
+        text=True,
+        timeout=90,
+        check=False,
+    )
+    if completed.returncode != 0:
+        stderr = completed.stderr.strip() or "playwright_recipe_fetch_failed"
+        if "Cannot find module 'playwright'" in stderr:
+            raise RuntimeError(
+                "playwright_recipe_fetch_failed:playwright_not_installed "
+                "(run: npm install playwright && npx playwright install chromium)"
+            )
+        raise RuntimeError(stderr)
+    return completed.stdout
 
 
 def _extract_rss_links(xml: str) -> list[str]:
     links = re.findall(r"<link>(https?://[^<]+)</link>", xml)
     unique: list[str] = []
     for link in links:
-        if "bing.com/search?" in link:
+        normalized = html.unescape(link).strip()
+        parsed = urlparse(normalized)
+        # Bing RSS results sometimes include links back to Bing's own search pages
+        # (often with a port like `www.bing.com:80/search?...`), which will never be
+        # valid recipe pages.
+        if parsed.hostname and parsed.hostname.lower().endswith("bing.com"):
+            if parsed.path.lower().startswith("/search"):
+                continue
+        if "bing.com/search" in normalized.lower():
             continue
-        if link not in unique:
-            unique.append(link)
+        if normalized not in unique:
+            unique.append(normalized)
     return unique
 
 
@@ -115,6 +179,7 @@ def _parse_recipe_json_ld(payload: object, url: str) -> RecipeDocument | None:
 @dataclass(frozen=True)
 class WebSearchConfig:
     max_links: int = 20
+    use_relaxed_query_fallback: bool = True
     trusted_domains: tuple[str, ...] = (
         "allrecipes.com",
         "foodnetwork.com",
@@ -122,46 +187,257 @@ class WebSearchConfig:
         "delish.com",
         "epicurious.com",
     )
+    allowed_path_tokens: tuple[str, ...] = (
+        "/r/",
+        "/recipe/",
+        "/recipes/",
+        "/food-recipes/",
+    )
+    blocked_path_tokens: tuple[str, ...] = (
+        "/forum",
+        "/forums",
+        "/article",
+        "/articles",
+        "/news",
+        "/photos/",
+        "/videos/",
+        "/collections/",
+    )
 
 
 class WebRecipeSearchAdapter(RecipeSearchAdapter):
     def __init__(self, config: WebSearchConfig | None = None, fetch_text: FetchText | None = None) -> None:
         self._config = config or WebSearchConfig()
         self._fetch_text = fetch_text or default_fetch_text
+        self.last_stats: dict[str, object] = {
+            "used_relaxed_query": False,
+            "rss_queries": 0,
+            "raw_links": 0,
+            "allowed_links": 0,
+            "rejected_domain": 0,
+            "rejected_path": 0,
+            "pages_fetched": 0,
+            "pages_parsed": 0,
+            "pages_failed_http": 0,
+            "pages_failed_403": 0,
+            "pages_failed_timeout": 0,
+            "pages_no_jsonld": 0,
+            "pages_non_recipe_jsonld": 0,
+            "pages_recipe_without_rating": 0,
+        }
 
-    def _build_query(self, sale_items: tuple[SaleItem, ...]) -> str:
-        anchors = [item.name for item in sale_items[:3]]
-        anchor_text = " ".join(anchors) if anchors else "grocery sale"
-        domains = " OR ".join(f"site:{domain}" for domain in self._config.trusted_domains[:3])
-        return f"{anchor_text} healthy easy recipe rating reviews {domains}"
+    def _pick_query_anchors(self, sale_items: tuple[SaleItem, ...], *, max_anchors: int) -> list[str]:
+        # Bing often returns better "recipe" results when anchored on common proteins.
+        # Since our ad parser may sometimes only extract coarse anchors (e.g. Produce/Dairy),
+        # we bias toward these protein tokens for live web search.
+        protein_tokens = ("chicken", "beef", "pork", "turkey", "lamb")
 
-    def _search_links(self, query: str) -> list[str]:
+        picked: list[str] = []
+        for item in sale_items:
+            name = (item.name or "").lower()
+            for token in protein_tokens:
+                if token in name and token not in picked:
+                    picked.append(token)
+            if len(picked) >= max_anchors:
+                break
+
+        if picked:
+            return picked[:max_anchors]
+
+        # Fallback: use a deterministic protein set to keep search on track.
+        return list(protein_tokens)[:max_anchors]
+
+    def _build_query_for_domain(self, sale_items: tuple[SaleItem, ...], domain: str) -> str:
+        anchors = self._pick_query_anchors(sale_items, max_anchors=1)
+        anchor_text = anchors[0] if anchors else "chicken"
+        # Keep query syntax simple so Bing RSS reliably returns results from the targeted domain.
+        return f"site:{domain} {anchor_text} recipe"
+
+    def _build_relaxed_query_for_domain(self, sale_items: tuple[SaleItem, ...], domain: str) -> str:
+        anchors = self._pick_query_anchors(sale_items, max_anchors=1)
+        anchor_text = anchors[0] if anchors else "chicken"
+        return f"site:{domain} {anchor_text} recipe"
+
+    def _is_allowed_link(self, link: str, *, domain_filter: str | None = None) -> bool:
+        parsed = urlparse(link)
+        host = parsed.netloc.lower()
+        if host.startswith("www."):
+            host = host[4:]
+
+        allowed_domains = (domain_filter,) if domain_filter else self._config.trusted_domains
+        if not any(host == domain or host.endswith(f".{domain}") for domain in allowed_domains):
+            self.last_stats["rejected_domain"] = int(self.last_stats["rejected_domain"]) + 1
+            return False
+
+        path = parsed.path.lower()
+        if any(token in path for token in self._config.blocked_path_tokens):
+            self.last_stats["rejected_path"] = int(self.last_stats["rejected_path"]) + 1
+            return False
+        if any(token in path for token in self._config.allowed_path_tokens):
+            return True
+        self.last_stats["rejected_path"] = int(self.last_stats["rejected_path"]) + 1
+        return False
+
+    def _search_links(self, query: str, *, max_links: int, domain_filter: str | None = None) -> list[str]:
+        self.last_stats["rss_queries"] = int(self.last_stats["rss_queries"]) + 1
         url = f"https://www.bing.com/search?format=rss&q={quote_plus(query)}"
         xml = self._fetch_text(url)
         links = _extract_rss_links(xml)
-        return links[: self._config.max_links]
+        self.last_stats["raw_links"] = int(self.last_stats["raw_links"]) + len(links)
+        gated = [link for link in links if self._is_allowed_link(link, domain_filter=domain_filter)]
+        self.last_stats["allowed_links"] = int(self.last_stats["allowed_links"]) + len(gated)
+        return gated[:max_links]
 
     def _parse_recipe_page(self, url: str) -> RecipeDocument | None:
-        html = self._fetch_text(url)
-        for block in _extract_json_ld_blocks(html):
+        self.last_stats["pages_fetched"] = int(self.last_stats["pages_fetched"]) + 1
+        try:
+            html = self._fetch_text(url)
+        except HTTPError as error:
+            self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
+            if int(error.code) == 403:
+                self.last_stats["pages_failed_403"] = int(self.last_stats["pages_failed_403"]) + 1
+            return None
+        except (TimeoutError, URLError):
+            self.last_stats["pages_failed_timeout"] = int(self.last_stats["pages_failed_timeout"]) + 1
+            return None
+        except Exception:
+            self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
+            return None
+
+        blocks = _extract_json_ld_blocks(html)
+        if not blocks:
+            self.last_stats["pages_no_jsonld"] = int(self.last_stats["pages_no_jsonld"]) + 1
+            return None
+
+        saw_non_recipe = False
+        for block in blocks:
             try:
                 payload = json.loads(block.strip())
             except json.JSONDecodeError:
                 continue
             parsed = _parse_recipe_json_ld(payload, url)
             if parsed:
+                self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
                 return parsed
+            if isinstance(payload, dict):
+                node_type = payload.get("@type")
+                type_list = node_type if isinstance(node_type, list) else [node_type]
+                if "Recipe" not in [str(item) for item in type_list] and payload.get("@graph") is None:
+                    saw_non_recipe = True
+                else:
+                    self.last_stats["pages_recipe_without_rating"] = int(
+                        self.last_stats["pages_recipe_without_rating"]
+                    ) + 1
+        if saw_non_recipe:
+            self.last_stats["pages_non_recipe_jsonld"] = int(self.last_stats["pages_non_recipe_jsonld"]) + 1
         return None
 
     def search(self, sale_items: tuple[SaleItem, ...]) -> list[RecipeDocument]:
-        query = self._build_query(sale_items)
-        links = self._search_links(query)
+        self.last_stats = {
+            "used_relaxed_query": False,
+            "rss_queries": 0,
+            "raw_links": 0,
+            "allowed_links": 0,
+            "rejected_domain": 0,
+            "rejected_path": 0,
+            "pages_fetched": 0,
+            "pages_parsed": 0,
+            "pages_failed_http": 0,
+            "pages_failed_403": 0,
+            "pages_failed_timeout": 0,
+            "pages_no_jsonld": 0,
+            "pages_non_recipe_jsonld": 0,
+            "pages_recipe_without_rating": 0,
+        }
+
+        links: list[str] = []
+
+        # Strict per-domain pass
+        for domain in self._config.trusted_domains:
+            remaining = self._config.max_links - len(links)
+            if remaining <= 0:
+                break
+            query = self._build_query_for_domain(sale_items, domain)
+            links.extend(self._search_links(query, max_links=remaining, domain_filter=domain))
+
+        # Relaxed fallback if strict pass produced nothing
+        if not links and self._config.use_relaxed_query_fallback:
+            self.last_stats["used_relaxed_query"] = True
+            for domain in self._config.trusted_domains:
+                remaining = self._config.max_links - len(links)
+                if remaining <= 0:
+                    break
+                relaxed_query = self._build_relaxed_query_for_domain(sale_items, domain)
+                links.extend(self._search_links(relaxed_query, max_links=remaining, domain_filter=domain))
+
+        # Final permissive pass: if Bing results do not include any allowed links, try parsing
+        # JSON-LD from whatever pages are returned. JSON-LD parsing still enforces Recipe + rating.
+        if not links:
+            anchors = [item.name for item in sale_items[:2]]
+            anchor_text = " ".join(anchors) if anchors else "easy dinner"
+            # Permissive query without strict site constraint; still expects Recipe JSON-LD on destination pages.
+            permissive_query = f"{anchor_text} easy recipe"
+            self.last_stats["rss_queries"] = int(self.last_stats["rss_queries"]) + 1
+            url = f"https://www.bing.com/search?format=rss&q={quote_plus(permissive_query)}"
+            xml = self._fetch_text(url)
+            raw_links = _extract_rss_links(xml)
+            self.last_stats["raw_links"] = int(self.last_stats["raw_links"]) + len(raw_links)
+            # Still gate to trusted domains/paths to reduce noise and avoid fetching pages
+            # that never contain Recipe JSON-LD.
+            gated = [link for link in raw_links if self._is_allowed_link(link)]
+            self.last_stats["allowed_links"] = int(self.last_stats["allowed_links"]) + len(gated)
+            links = gated[: self._config.max_links]
+
         docs: list[RecipeDocument] = []
         for link in links:
-            try:
-                parsed = self._parse_recipe_page(link)
-            except Exception:
-                continue
+            parsed = self._parse_recipe_page(link)
             if parsed:
                 docs.append(parsed)
         return docs
+
+
+class PlaywrightRecipeSearchAdapter(WebRecipeSearchAdapter):
+    def __init__(
+        self,
+        config: WebSearchConfig | None = None,
+        fetch_text: FetchText | None = None,
+        playwright_fetch_text: PlaywrightFetchText | None = None,
+    ) -> None:
+        super().__init__(config=config, fetch_text=fetch_text)
+        self._playwright_fetch_text = playwright_fetch_text or default_playwright_fetch_text
+
+    def _parse_recipe_page(self, url: str) -> RecipeDocument | None:
+        self.last_stats["pages_fetched"] = int(self.last_stats["pages_fetched"]) + 1
+        try:
+            html = self._playwright_fetch_text(url)
+        except Exception:
+            self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
+            return None
+
+        blocks = _extract_json_ld_blocks(html)
+        if not blocks:
+            self.last_stats["pages_no_jsonld"] = int(self.last_stats["pages_no_jsonld"]) + 1
+            return None
+
+        saw_non_recipe = False
+        for block in blocks:
+            try:
+                payload = json.loads(block.strip())
+            except json.JSONDecodeError:
+                continue
+            parsed = _parse_recipe_json_ld(payload, url)
+            if parsed:
+                self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+                return parsed
+            if isinstance(payload, dict):
+                node_type = payload.get("@type")
+                type_list = node_type if isinstance(node_type, list) else [node_type]
+                if "Recipe" not in [str(item) for item in type_list] and payload.get("@graph") is None:
+                    saw_non_recipe = True
+                else:
+                    self.last_stats["pages_recipe_without_rating"] = int(
+                        self.last_stats["pages_recipe_without_rating"]
+                    ) + 1
+        if saw_non_recipe:
+            self.last_stats["pages_non_recipe_jsonld"] = int(self.last_stats["pages_non_recipe_jsonld"]) + 1
+        return None

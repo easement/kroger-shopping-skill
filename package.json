@@ -1,0 +1,27 @@
+{
+  "name": "grocery-weekly-menu-skill",
+  "version": "1.0.0",
+  "description": "Run these from `grocery-weekly-menu-skill/`:",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/easement/kroger-shopping-skill.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/easement/kroger-shopping-skill/issues"
+  },
+  "homepage": "https://github.com/easement/kroger-shopping-skill#readme",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}

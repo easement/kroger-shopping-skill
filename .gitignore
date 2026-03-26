@@ -208,3 +208,7 @@ __marimo__/
 
 # Project runtime outputs
 runs/
+
+# Local/live request header captures (sensitive browser-derived values)
+fixtures/kroger_extra_headers.live.json
+fixtures/*extra_headers*.live.json

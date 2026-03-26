@@ -64,6 +64,8 @@ class PipelineTests(unittest.TestCase):
         self.assertFalse(result.used_manual_fallback)
         self.assertEqual(result.ad_context.source, "kroger-web")
         self.assertEqual(len(result.meals), 10)
+        self.assertIsNotNone(result.diagnostics)
+        self.assertEqual(result.diagnostics.selected_meals, 10)
 
     def test_pipeline_uses_manual_fallback_when_ad_capture_fails(self) -> None:
         failed_ad_result = AdCaptureResult(
@@ -113,6 +115,25 @@ class PipelineTests(unittest.TestCase):
         self.assertFalse(result.used_manual_fallback)
         self.assertEqual(len(result.meals), 0)
         self.assertIn("timed out", result.ad_context.message)
+
+    def test_pipeline_reports_insufficient_reason_when_candidates_too_few(self) -> None:
+        ad_result = AdCaptureResult(
+            success=True,
+            location_id="01100459",
+            source="kroger-web",
+            sale_items=(SaleItem(name="chicken", price_text="$1.99/lb", category="protein"),),
+        )
+        adapter = StaticAdCaptureAdapter(ad_result)
+        docs = [make_doc(1, cuisine="Italian", protein="chicken")]
+
+        result = run_menu_pipeline(
+            ad_adapter=adapter,
+            recipe_docs=docs,
+            location_id="01100459",
+            target_count=10,
+        )
+        self.assertIsNotNone(result.diagnostics)
+        self.assertEqual(result.diagnostics.insufficient_reason, "insufficient_eligible_candidates")
 
 
 if __name__ == "__main__":
