@@ -74,3 +74,8 @@ For each of the 10 meals, include:
 - If ad context cannot be fetched: ask for manual sale highlights and continue.
 - If candidates are too sparse after constraints: broaden source search while keeping hard exclusions.
 - If rating metadata is missing: discard the entry.
+
+## Weekly Refresh + Markdown Output
+When user asks to refresh this week’s plan, run:
+`python3 -m scripts.refresh_live_deals_fixture && python3 -m scripts.refresh_live_recipes_fixture --mode playwright --target-count 100 --allow-shortfall && python3 -m scripts.run_weekly_plan --ad-mode fixture --ad-fixture fixtures/ad.live.from-deals.json --search-mode fixture --recipe-fixture fixtures/recipes.live.json --target-count 10 --quality-gate --output-format meal-markdown`
+Then return the markdown meal list output.
