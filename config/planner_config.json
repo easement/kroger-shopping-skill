@@ -3,5 +3,6 @@
   "max_prep_minutes": 45,
   "max_per_protein": 3,
   "max_per_cuisine": 4,
+  "max_per_source_domain": 3,
   "min_trusted_ratio": 0.3
 }

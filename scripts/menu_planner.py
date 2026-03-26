@@ -89,6 +89,7 @@ class PlannerConfig:
     max_prep_minutes: int = 45
     max_per_protein: int = 3
     max_per_cuisine: int = 4
+    max_per_source_domain: int = 10
     min_trusted_ratio: float = 0.3
 
 
@@ -185,37 +186,94 @@ def enforce_diversity(
     selected: list[RankedRecipe] = []
     by_protein: dict[str, int] = {}
     by_cuisine: dict[str, int] = {}
+    by_domain: dict[str, int] = {}
     max_per_protein = active_config.max_per_protein
     max_per_cuisine = active_config.max_per_cuisine
+    max_per_domain = active_config.max_per_source_domain
 
-    for ranked in sorted_ranked:
-        if len(selected) >= target_count:
-            break
+    def can_select(
+        protein_key: str,
+        cuisine_key: str,
+        domain_key: str,
+        *,
+        enforce_protein_cap: bool,
+        enforce_cuisine_cap: bool,
+        enforce_domain_cap: bool,
+    ) -> bool:
+        if enforce_protein_cap and by_protein.get(protein_key, 0) >= max_per_protein:
+            return False
+        if enforce_cuisine_cap and by_cuisine.get(cuisine_key, 0) >= max_per_cuisine:
+            return False
+        if enforce_domain_cap and by_domain.get(domain_key, 0) >= max_per_domain:
+            return False
+        return True
 
-        protein_key = _normalize(ranked.candidate.protein)
-        cuisine_key = _normalize(ranked.candidate.cuisine)
+    selected_ids: set[str] = set()
 
-        if by_protein.get(protein_key, 0) >= max_per_protein:
-            continue
-
-        if by_cuisine.get(cuisine_key, 0) >= max_per_cuisine:
-            continue
-
-        selected.append(ranked)
-        by_protein[protein_key] = by_protein.get(protein_key, 0) + 1
-        by_cuisine[cuisine_key] = by_cuisine.get(cuisine_key, 0) + 1
-
-    if len(selected) < target_count:
-        selected_ids = {item.candidate.url for item in selected}
+    def add_candidates(
+        *,
+        enforce_protein_cap: bool,
+        enforce_cuisine_cap: bool,
+        enforce_domain_cap: bool,
+    ) -> None:
         for ranked in sorted_ranked:
             if len(selected) >= target_count:
                 break
-            if ranked.candidate.url in selected_ids:
+            recipe_url = ranked.candidate.url
+            if recipe_url in selected_ids:
+                continue
+            protein_key = _normalize(ranked.candidate.protein)
+            cuisine_key = _normalize(ranked.candidate.cuisine)
+            domain_key = _normalize(ranked.candidate.source_domain)
+            if not can_select(
+                protein_key,
+                cuisine_key,
+                domain_key,
+                enforce_protein_cap=enforce_protein_cap,
+                enforce_cuisine_cap=enforce_cuisine_cap,
+                enforce_domain_cap=enforce_domain_cap,
+            ):
                 continue
             selected.append(ranked)
-            selected_ids.add(ranked.candidate.url)
+            selected_ids.add(recipe_url)
+            by_protein[protein_key] = by_protein.get(protein_key, 0) + 1
+            by_cuisine[cuisine_key] = by_cuisine.get(cuisine_key, 0) + 1
+            by_domain[domain_key] = by_domain.get(domain_key, 0) + 1
 
-    return selected
+    # Prefer strong diversity first, then progressively relax caps to fill target_count.
+    add_candidates(enforce_protein_cap=True, enforce_cuisine_cap=True, enforce_domain_cap=True)
+    add_candidates(enforce_protein_cap=True, enforce_cuisine_cap=False, enforce_domain_cap=True)
+    add_candidates(enforce_protein_cap=True, enforce_cuisine_cap=False, enforce_domain_cap=False)
+    add_candidates(enforce_protein_cap=False, enforce_cuisine_cap=False, enforce_domain_cap=False)
+
+    return _interleave_by_protein(selected)
+
+
+def _interleave_by_protein(selected: list[RankedRecipe]) -> list[RankedRecipe]:
+    if len(selected) <= 2:
+        return selected
+
+    buckets: dict[str, list[RankedRecipe]] = {}
+    protein_order: list[str] = []
+    for ranked in selected:
+        key = _normalize(ranked.candidate.protein) or "unknown"
+        if key not in buckets:
+            buckets[key] = []
+            protein_order.append(key)
+        buckets[key].append(ranked)
+
+    interleaved: list[RankedRecipe] = []
+    while len(interleaved) < len(selected):
+        made_progress = False
+        for protein in protein_order:
+            bucket = buckets.get(protein) or []
+            if not bucket:
+                continue
+            interleaved.append(bucket.pop(0))
+            made_progress = True
+        if not made_progress:
+            break
+    return interleaved
 
 
 def plan_weekly_menu_with_diagnostics(

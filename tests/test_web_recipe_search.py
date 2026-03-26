@@ -6,10 +6,39 @@ from scripts.web_recipe_search import (
     WebRecipeSearchAdapter,
     WebSearchConfig,
     _extract_rss_links,
+    _parse_recipe_json_ld,
 )
 
 
 class WebRecipeSearchTests(unittest.TestCase):
+    def test_parse_recipe_json_ld_infers_seafood_protein_from_title(self) -> None:
+        payload = {
+            "@context": "https://schema.org",
+            "@type": "Recipe",
+            "name": "The Best Baked Salmon",
+            "recipeCuisine": "American",
+            "recipeIngredient": ["olive oil", "lemon", "salt"],
+            "aggregateRating": {"ratingValue": "4.6", "ratingCount": "970"},
+        }
+        doc = _parse_recipe_json_ld(payload, "https://foodnetwork.com/recipes/salmon")
+        self.assertIsNotNone(doc)
+        assert doc is not None
+        self.assertEqual(doc.protein, "salmon")
+
+    def test_parse_recipe_json_ld_infers_tuna_from_ingredients(self) -> None:
+        payload = {
+            "@context": "https://schema.org",
+            "@type": "Recipe",
+            "name": "Simple Sandwich",
+            "recipeCuisine": "American",
+            "recipeIngredient": ["canned tuna", "celery", "mayo"],
+            "aggregateRating": {"ratingValue": "4.3", "ratingCount": "239"},
+        }
+        doc = _parse_recipe_json_ld(payload, "https://foodnetwork.com/recipes/tuna")
+        self.assertIsNotNone(doc)
+        assert doc is not None
+        self.assertEqual(doc.protein, "tuna")
+
     def test_extract_rss_links_parses_unique_links(self) -> None:
         xml = """
         <rss><channel>

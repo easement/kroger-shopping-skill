@@ -1,6 +1,12 @@
 import unittest
 
-from scripts.menu_planner import RecipeCandidate, plan_weekly_menu, score_candidate
+from scripts.menu_planner import (
+    PlannerConfig,
+    RecipeCandidate,
+    plan_weekly_menu,
+    plan_weekly_menu_with_diagnostics,
+    score_candidate,
+)
 
 
 def make_candidate(
@@ -105,8 +111,8 @@ class MenuPlannerTests(unittest.TestCase):
         candidates = [
             make_candidate(
                 idx=i,
-                cuisine=("Italian" if i % 2 == 0 else "Mexican"),
-                protein=("chicken" if i % 3 == 0 else "beef" if i % 3 == 1 else "pork"),
+                cuisine=("Italian" if i % 4 == 0 else "Mexican" if i % 4 == 1 else "American" if i % 4 == 2 else "Greek"),
+                protein=("chicken" if i % 4 == 0 else "beef" if i % 4 == 1 else "pork" if i % 4 == 2 else "salmon"),
                 vote_count=100 + i,
             )
             for i in range(1, 21)
@@ -117,6 +123,46 @@ class MenuPlannerTests(unittest.TestCase):
         for item in result:
             self.assertGreaterEqual(item.candidate.rating, 4.0)
             self.assertGreater(item.candidate.vote_count, 0)
+
+    def test_diversity_caps_limit_source_domain_when_alternatives_exist(self) -> None:
+        heavy_one_domain = [
+            make_candidate(
+                idx=i,
+                cuisine="Italian",
+                protein=("chicken" if i % 2 == 0 else "beef"),
+                source_domain="foodnetwork.com",
+                vote_count=200 + i,
+            )
+            for i in range(1, 12)
+        ]
+        other_domains = [
+            make_candidate(idx=101, cuisine="American", protein="pork", source_domain="allrecipes.com"),
+            make_candidate(idx=102, cuisine="Greek", protein="lamb", source_domain="seriouseats.com"),
+            make_candidate(idx=103, cuisine="Mexican", protein="turkey", source_domain="skinnytaste.com"),
+            make_candidate(idx=104, cuisine="Italian", protein="beef", source_domain="food52.com"),
+        ]
+        config = PlannerConfig(max_per_source_domain=2)
+        result, _ = plan_weekly_menu_with_diagnostics(
+            heavy_one_domain + other_domains,
+            target_count=6,
+            config=config,
+        )
+        domains = [item.candidate.source_domain for item in result]
+        self.assertLessEqual(domains.count("foodnetwork.com"), 2)
+
+    def test_selected_order_interleaves_proteins(self) -> None:
+        candidates = [
+            make_candidate(idx=1, cuisine="Italian", protein="chicken", vote_count=400),
+            make_candidate(idx=2, cuisine="Italian", protein="chicken", vote_count=390),
+            make_candidate(idx=3, cuisine="Italian", protein="chicken", vote_count=380),
+            make_candidate(idx=4, cuisine="American", protein="beef", vote_count=370),
+            make_candidate(idx=5, cuisine="American", protein="beef", vote_count=360),
+            make_candidate(idx=6, cuisine="Mexican", protein="pork", vote_count=350),
+        ]
+        result = plan_weekly_menu(candidates, target_count=6)
+        proteins = [item.candidate.protein.lower() for item in result]
+        # Expect mixed sequence rather than all chicken first.
+        self.assertNotEqual(proteins[:3], ["chicken", "chicken", "chicken"])
 
 
 if __name__ == "__main__":

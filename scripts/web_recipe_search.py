@@ -122,6 +122,26 @@ def _as_list(value: object) -> list[str]:
     return []
 
 
+def _infer_protein(ingredients: tuple[str, ...], title: str) -> str:
+    joined = " | ".join([title.lower(), *[item.lower() for item in ingredients]])
+    protein_tokens = (
+        "chicken",
+        "beef",
+        "pork",
+        "turkey",
+        "lamb",
+        "salmon",
+        "tuna",
+        "shrimp",
+        "cod",
+        "tilapia",
+    )
+    for token in protein_tokens:
+        if token in joined:
+            return token
+    return "unknown"
+
+
 def _parse_recipe_json_ld(payload: object, url: str) -> RecipeDocument | None:
     if isinstance(payload, list):
         for item in payload:
@@ -156,13 +176,7 @@ def _parse_recipe_json_ld(payload: object, url: str) -> RecipeDocument | None:
     ingredients = tuple(_as_list(payload.get("recipeIngredient")))
     title = str(payload.get("name") or "Unknown Recipe")
     total_time = _to_minutes(str(payload.get("totalTime") or ""))
-
-    protein = "unknown"
-    joined_ingredients = " | ".join(item.lower() for item in ingredients)
-    for token in ("chicken", "beef", "pork", "turkey", "lamb"):
-        if token in joined_ingredients:
-            protein = token
-            break
+    protein = _infer_protein(ingredients, title)
 
     return RecipeDocument(
         title=title,

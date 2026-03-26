@@ -3,9 +3,36 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+
+from scripts.run_weekly_plan import _group_meals_by_protein, _meal_prefix_and_price
 
 
 class RunWeeklyPlanCliTests(unittest.TestCase):
+    def test_group_meals_by_protein_clusters_same_proteins(self) -> None:
+        meal1 = SimpleNamespace(candidate=SimpleNamespace(protein="chicken"))
+        meal2 = SimpleNamespace(candidate=SimpleNamespace(protein="beef"))
+        meal3 = SimpleNamespace(candidate=SimpleNamespace(protein="chicken"))
+        meal4 = SimpleNamespace(candidate=SimpleNamespace(protein="beef"))
+        result = SimpleNamespace(meals=[meal1, meal2, meal3, meal4])
+        grouped = _group_meals_by_protein(result)
+        proteins = [meal.candidate.protein for meal in grouped]
+        self.assertEqual(proteins, ["chicken", "chicken", "beef", "beef"])
+
+    def test_meal_prefix_prefers_protein_aligned_sale_match(self) -> None:
+        candidate = SimpleNamespace(
+            sale_item_matches=("tomato", "turkey"),
+            protein="turkey",
+        )
+        item = SimpleNamespace(candidate=candidate)
+        main, price = _meal_prefix_and_price(
+            result=SimpleNamespace(),
+            item=item,
+            sale_price_lookup={"tomato": "2 for $4", "turkey breast": "$12.49", "turkey": "$12.49"},
+        )
+        self.assertEqual(main, "Turkey")
+        self.assertEqual(price, "$12.49")
+
     def test_cli_replay_captures_dir_returns_stats(self) -> None:
         root = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as tmp_dir:

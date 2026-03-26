@@ -19,5 +19,6 @@ def load_planner_config(path: str | None) -> PlannerConfig:
         max_prep_minutes=int(payload.get("max_prep_minutes", 45)),
         max_per_protein=int(payload.get("max_per_protein", 3)),
         max_per_cuisine=int(payload.get("max_per_cuisine", 4)),
+        max_per_source_domain=int(payload.get("max_per_source_domain", 10)),
         min_trusted_ratio=float(payload.get("min_trusted_ratio", 0.3)),
     )

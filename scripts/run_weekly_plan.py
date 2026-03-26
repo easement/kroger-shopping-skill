@@ -59,20 +59,35 @@ def _build_sale_price_lookup(result: object) -> dict[str, str]:
 
 def _meal_prefix_and_price(result: object, item: object, sale_price_lookup: dict[str, str]) -> tuple[str, str]:
     matches = list(getattr(item.candidate, "sale_item_matches", ()) or ())
+    protein = str(getattr(item.candidate, "protein", "")).strip()
+    protein_lower = protein.lower()
+
+    if matches and protein_lower:
+        for match in matches:
+            match_text = str(match).strip()
+            if not match_text:
+                continue
+            match_lower = match_text.lower()
+            if protein_lower in match_lower or match_lower in protein_lower:
+                price = sale_price_lookup.get(match_lower, "N/A")
+                return protein.title(), price
+
+    if protein:
+        # If no direct protein match exists, keep the protein as the main label
+        # and use the best available matched sale price.
+        for sale_name, sale_price in sale_price_lookup.items():
+            if protein_lower and protein_lower in sale_name:
+                return protein.title(), sale_price
+        if matches:
+            fallback_match = str(matches[0]).strip().lower()
+            return protein.title(), sale_price_lookup.get(fallback_match, "N/A")
+        return protein.title(), "N/A"
+
     if matches:
         main = str(matches[0]).strip()
         if main:
             price = sale_price_lookup.get(main.lower(), "N/A")
             return main.title(), price
-
-    protein = str(getattr(item.candidate, "protein", "")).strip()
-    if protein:
-        # Try to find a sale item containing the protein token.
-        protein_lower = protein.lower()
-        for sale_name, sale_price in sale_price_lookup.items():
-            if protein_lower in sale_name:
-                return protein.title(), sale_price
-        return protein.title(), "N/A"
 
     return "Unknown", "N/A"
 
@@ -80,7 +95,7 @@ def _meal_prefix_and_price(result: object, item: object, sale_price_lookup: dict
 def _format_meal_plain_lines(result: object) -> str:
     sale_price_lookup = _build_sale_price_lookup(result)
     lines: list[str] = []
-    for item in result.meals:
+    for item in _group_meals_by_protein(result):
         site = _pretty_site_name(item.candidate.url)
         main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
         lines.append(f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}")
@@ -91,12 +106,32 @@ def _format_meal_plain_lines(result: object) -> str:
 def _format_meal_markdown_lines(result: object) -> str:
     sale_price_lookup = _build_sale_price_lookup(result)
     lines: list[str] = []
-    for item in result.meals:
+    for item in _group_meals_by_protein(result):
         site = _pretty_site_name(item.candidate.url)
         main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
         label = f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}"
         lines.append(f"- [{label}]({item.candidate.url})")
     return "\n".join(lines)
+
+
+def _group_meals_by_protein(result: object) -> list[object]:
+    meals = list(getattr(result, "meals", ()) or ())
+    if len(meals) <= 1:
+        return meals
+
+    grouped: dict[str, list[object]] = {}
+    protein_order: list[str] = []
+    for meal in meals:
+        protein = str(getattr(meal.candidate, "protein", "")).strip().lower() or "unknown"
+        if protein not in grouped:
+            grouped[protein] = []
+            protein_order.append(protein)
+        grouped[protein].append(meal)
+
+    ordered: list[object] = []
+    for protein in protein_order:
+        ordered.extend(grouped[protein])
+    return ordered
 
 
 def _validate_output_schema(payload: dict[str, object]) -> None:
