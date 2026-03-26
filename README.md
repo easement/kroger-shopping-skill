@@ -120,6 +120,30 @@ The current implementation includes:
 
 - Python 3.10+ (the project currently runs with `python3`)
 - Cursor installed
+- Node.js + npm (required for Playwright/browser-backed modes)
+
+## Setup
+
+From `grocery-weekly-menu-skill/`, run:
+
+```bash
+./scripts/setup.sh
+```
+
+This setup script:
+- validates Python/Node/npm availability
+- installs npm dependencies
+- installs Playwright Chromium browser binaries
+- verifies Playwright import
+- runs the Python test suite
+
+Manual equivalent:
+
+```bash
+npm install
+npx playwright install chromium
+python3 -m unittest discover -s tests -p "test_*.py"
+```
 
 ## Install and Run in Cursor
 
