@@ -82,57 +82,11 @@ Validate inputs only:
 python3 -m scripts.run_weekly_plan --validate-only --search-mode fixture --recipe-fixture fixtures/recipes.sample.json --ad-fixture fixtures/ad.sample.json
 ```
 
-## Code Flow
+## Docs
 
-```mermaid
-flowchart TD
-    A[Export live-deals JSON] --> B[refresh_live_deals_fixture.py]
-    B --> C[fixtures/ad.live.from-deals.json]
-    D[refresh_live_recipes_fixture.py] --> E[fixtures/recipes.live.json]
-    C --> F[run_weekly_plan.py]
-    E --> F
-    F --> G[Candidate build + sale matching]
-    G --> H[Eligibility filters]
-    H --> I[Score + diversity]
-    I --> J[json / meal-lines / meal-markdown]
-```
-
-### Script Responsibilities
-
-- `scripts.refresh_live_deals_fixture.py`: convert exported deals JSON into normalized ad fixture
-- `scripts.refresh_live_recipes_fixture.py`: fetch/parse live recipes, exclude last-week URLs, write fixture
-- `scripts.run_weekly_plan.py`: load fixtures/adapters, plan meals, emit output formats
-
-### Data Shapes (High Level)
-
-- Ad fixture item: `{ "name": "...", "price_text": "...", "category": "..." }`
-- Recipe fixture item: `{ "title","url","cuisine","protein","ingredients","rating","vote_count","prep_minutes","healthy" }`
-- Meal output item: `{ "title","url","rating","vote_count","score","cuisine","protein","sale_item_matches" }`
-
-## Troubleshooting
-
-- `written=0` on recipe refresh:
-  - retry Playwright mode and ensure browser install:
-  - `npm install playwright && npx playwright install chromium`
-- `used_backfill_from_excluded=true`:
-  - novelty pool was exhausted; script reused current results to avoid empty fixture
-- low recipe count:
-  - keep `--allow-shortfall` enabled so planner still runs
-  - rerun later or on another network if domains are timing out/blocked
-
-Compact healthy refresh example:
-
-```json
-{
-  "status": "ok",
-  "mode": "playwright",
-  "target_count": 100,
-  "written": 72,
-  "excluded_from_last_week": 24,
-  "used_backfill_from_excluded": false,
-  "allow_shortfall": true
-}
-```
+- Detailed implementation + debugging guide: `docs/DEVELOPMENT.md`
+- Skill behavior and prompt contract: `SKILL.md`
+- Prompt QA scenarios: `references/test-prompts.md`
 
 ## Configuration Notes
 
