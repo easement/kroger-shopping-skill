@@ -204,6 +204,36 @@ class MenuPlannerTests(unittest.TestCase):
         self.assertLessEqual(by_domain_protein.get(("foodnetwork.com", "chicken"), 0), 2)
         self.assertLessEqual(by_domain_protein.get(("foodnetwork.com", "beef"), 0), 2)
 
+    def test_enforces_minimum_non_foodnetwork_quota(self) -> None:
+        foodnetwork_heavy = [
+            make_candidate(
+                idx=i,
+                cuisine="American",
+                protein=("chicken" if i % 2 == 0 else "beef"),
+                source_domain="foodnetwork.com",
+                vote_count=400 - i,
+            )
+            for i in range(1, 11)
+        ]
+        non_foodnetwork = [
+            make_candidate(idx=201, cuisine="Greek", protein="lamb", source_domain="epicurious.com", vote_count=160),
+            make_candidate(idx=202, cuisine="American", protein="turkey", source_domain="jocooks.com", vote_count=150),
+            make_candidate(idx=203, cuisine="Italian", protein="pork", source_domain="allrecipes.com", vote_count=140),
+            make_candidate(idx=204, cuisine="Mexican", protein="beef", source_domain="delish.com", vote_count=130),
+        ]
+        config = PlannerConfig(
+            max_per_source_domain=10,
+            max_per_protein=5,
+            min_non_foodnetwork_count=4,
+        )
+        result, _ = plan_weekly_menu_with_diagnostics(
+            foodnetwork_heavy + non_foodnetwork,
+            target_count=8,
+            config=config,
+        )
+        non_fn_count = len([item for item in result if item.candidate.source_domain != "foodnetwork.com"])
+        self.assertGreaterEqual(non_fn_count, 4)
+
 
 if __name__ == "__main__":
     unittest.main()

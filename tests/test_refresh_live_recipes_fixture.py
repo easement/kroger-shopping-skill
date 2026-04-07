@@ -87,6 +87,56 @@ class RefreshLiveRecipesFixtureTests(unittest.TestCase):
         self.assertTrue(used_backfill)
         self.assertEqual(len(selected), 2)
 
+    def test_select_with_backfill_fills_shortfall_not_only_zero(self) -> None:
+        docs = [
+            RecipeDocument(
+                title=f"Recipe {idx}",
+                url=f"https://example.com/r/{idx}",
+                cuisine="American",
+                protein="chicken",
+                ingredients=("chicken",),
+                rating=4.5,
+                vote_count=100 + idx,
+                prep_minutes=30,
+                healthy=True,
+            )
+            for idx in range(1, 5)
+        ]
+        excluded = {"https://example.com/r/3", "https://example.com/r/4"}
+        selected, used_backfill = _select_with_backfill(docs=docs, excluded_urls=excluded, target_count=3)
+        self.assertTrue(used_backfill)
+        self.assertEqual(len(selected), 3)
+        self.assertEqual([doc.url for doc in selected], ["https://example.com/r/1", "https://example.com/r/2", "https://example.com/r/3"])
+
+    def test_select_with_backfill_prefers_non_foodnetwork(self) -> None:
+        docs = [
+            RecipeDocument(
+                title="FN 1",
+                url="https://www.foodnetwork.com/r/1",
+                cuisine="American",
+                protein="chicken",
+                ingredients=("chicken",),
+                rating=4.5,
+                vote_count=100,
+                prep_minutes=30,
+                healthy=True,
+            ),
+            RecipeDocument(
+                title="AR 1",
+                url="https://allrecipes.com/r/1",
+                cuisine="American",
+                protein="chicken",
+                ingredients=("chicken",),
+                rating=4.5,
+                vote_count=100,
+                prep_minutes=30,
+                healthy=True,
+            ),
+        ]
+        excluded = {doc.url for doc in docs}
+        selected, _ = _select_with_backfill(docs=docs, excluded_urls=excluded, target_count=1)
+        self.assertEqual(selected[0].url, "https://allrecipes.com/r/1")
+
 
 if __name__ == "__main__":
     unittest.main()

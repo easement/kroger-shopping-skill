@@ -32,6 +32,7 @@ class ConfigLoaderTests(unittest.TestCase):
             self.assertEqual(config.max_per_protein, 2)
             self.assertEqual(config.max_per_cuisine, 3)
             self.assertEqual(config.max_foodnetwork_per_protein, 2)
+            self.assertEqual(config.min_non_foodnetwork_count, 4)
             self.assertEqual(config.min_trusted_ratio, 0.5)
 
 

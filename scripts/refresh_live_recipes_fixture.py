@@ -43,6 +43,37 @@ def _docs_to_fixture(docs: list[RecipeDocument]) -> list[dict[str, object]]:
     ]
 
 
+def _load_fixture_docs(path: Path) -> list[RecipeDocument]:
+    if not path.exists():
+        return []
+    payload = json.loads(path.read_text())
+    if not isinstance(payload, list):
+        return []
+    docs: list[RecipeDocument] = []
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        try:
+            docs.append(
+                RecipeDocument(
+                    title=str(item.get("title") or "Unknown Recipe"),
+                    url=str(item.get("url") or "").strip(),
+                    cuisine=str(item.get("cuisine") or "Unknown"),
+                    protein=str(item.get("protein") or "unknown"),
+                    ingredients=tuple(item.get("ingredients", [])),
+                    rating=float(item.get("rating", 0.0)),
+                    vote_count=int(item.get("vote_count", 0)),
+                    prep_minutes=int(item.get("prep_minutes", 45)),
+                    healthy=bool(item.get("healthy", True)),
+                    extraction_method=str(item.get("extraction_method") or "fixture"),
+                    extraction_confidence=float(item.get("extraction_confidence", 1.0)),
+                )
+            )
+        except (TypeError, ValueError):
+            continue
+    return docs
+
+
 def _seed_sale_items() -> tuple[SaleItem, ...]:
     return (SaleItem(name="chicken", price_text="N/A", category="seed"),)
 
@@ -91,24 +122,40 @@ def _select_with_backfill(
     docs: list[RecipeDocument],
     excluded_urls: set[str],
     target_count: int,
+    previous_docs: list[RecipeDocument] | None = None,
 ) -> tuple[list[RecipeDocument], bool]:
     selected = _select_fresh_docs(docs=docs, excluded_urls=excluded_urls, target_count=target_count)
-    if selected:
+    if len(selected) >= target_count:
         return selected, False
 
-    # If strict freshness yields nothing, keep the refresh usable by backfilling
-    # from current live docs (still deduped, but ignoring last-week exclusion).
-    seen: set[str] = set()
-    backfilled: list[RecipeDocument] = []
-    for doc in docs:
-        url = (doc.url or "").strip()
-        if not url or url in seen:
-            continue
-        seen.add(url)
-        backfilled.append(doc)
-        if len(backfilled) >= target_count:
-            break
-    return backfilled, bool(backfilled)
+    used_backfill = False
+    selected_urls = {doc.url for doc in selected if doc.url}
+
+    def append_from(pool: list[RecipeDocument], *, prefer_non_foodnetwork: bool) -> None:
+        nonlocal used_backfill
+        ordered = pool
+        if prefer_non_foodnetwork:
+            ordered = sorted(
+                pool,
+                key=lambda doc: 1 if "foodnetwork.com" in (doc.url or "").lower() else 0,
+            )
+        for doc in ordered:
+            if len(selected) >= target_count:
+                break
+            url = (doc.url or "").strip()
+            if not url or url in selected_urls:
+                continue
+            selected.append(doc)
+            selected_urls.add(url)
+            used_backfill = True
+
+    # First backfill from currently fetched docs that were excluded by freshness.
+    excluded_pool = [doc for doc in docs if (doc.url or "").strip() in excluded_urls]
+    append_from(excluded_pool, prefer_non_foodnetwork=True)
+
+    # If still short, use previous fixture docs as carryover continuity.
+    append_from(previous_docs or [], prefer_non_foodnetwork=True)
+    return selected, used_backfill
 
 
 def main() -> int:
@@ -125,6 +172,7 @@ def main() -> int:
 
     output_path = Path(args.output)
     last_week_path = Path(args.last_week)
+    previous_output_docs = _load_fixture_docs(output_path)
 
     excluded_urls = _load_fixture_urls(last_week_path)
     all_docs: list[RecipeDocument] = []
@@ -152,6 +200,7 @@ def main() -> int:
         docs=all_docs,
         excluded_urls=excluded_urls,
         target_count=args.target_count,
+        previous_docs=previous_output_docs,
     )
     if len(selected) < args.target_count and not args.allow_shortfall:
         raise ValueError(

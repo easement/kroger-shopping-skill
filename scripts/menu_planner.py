@@ -92,6 +92,7 @@ class PlannerConfig:
     max_per_cuisine: int = 4
     max_per_source_domain: int = 10
     max_foodnetwork_per_protein: int = 2
+    min_non_foodnetwork_count: int = 4
     min_trusted_ratio: float = 0.3
 
 
@@ -257,8 +258,54 @@ def enforce_diversity(
     add_candidates(enforce_protein_cap=True, enforce_cuisine_cap=False, enforce_domain_cap=True)
     add_candidates(enforce_protein_cap=True, enforce_cuisine_cap=False, enforce_domain_cap=False)
     add_candidates(enforce_protein_cap=False, enforce_cuisine_cap=False, enforce_domain_cap=False)
+    selected = _enforce_min_non_foodnetwork_count(
+        selected=selected,
+        sorted_ranked=sorted_ranked,
+        min_count=active_config.min_non_foodnetwork_count,
+    )
 
     return _interleave_by_protein(selected)
+
+
+def _enforce_min_non_foodnetwork_count(
+    *,
+    selected: list[RankedRecipe],
+    sorted_ranked: list[RankedRecipe],
+    min_count: int,
+) -> list[RankedRecipe]:
+    if min_count <= 0 or not selected:
+        return selected
+
+    def is_non_foodnetwork(item: RankedRecipe) -> bool:
+        return _normalize(item.candidate.source_domain) != "foodnetwork.com"
+
+    non_fn_count = len([item for item in selected if is_non_foodnetwork(item)])
+    if non_fn_count >= min_count:
+        return selected
+
+    selected_urls = {item.candidate.url for item in selected}
+    non_fn_pool = [
+        item
+        for item in sorted_ranked
+        if item.candidate.url not in selected_urls and is_non_foodnetwork(item)
+    ]
+    if not non_fn_pool:
+        return selected
+
+    foodnetwork_indices = [
+        idx for idx, item in enumerate(selected) if _normalize(item.candidate.source_domain) == "foodnetwork.com"
+    ]
+    replacement_index = 0
+    needed = min_count - non_fn_count
+
+    for idx in reversed(foodnetwork_indices):
+        if needed <= 0 or replacement_index >= len(non_fn_pool):
+            break
+        selected[idx] = non_fn_pool[replacement_index]
+        replacement_index += 1
+        needed -= 1
+
+    return selected
 
 
 def _interleave_by_protein(selected: list[RankedRecipe]) -> list[RankedRecipe]:

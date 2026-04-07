@@ -21,5 +21,6 @@ def load_planner_config(path: str | None) -> PlannerConfig:
         max_per_cuisine=int(payload.get("max_per_cuisine", 4)),
         max_per_source_domain=int(payload.get("max_per_source_domain", 10)),
         max_foodnetwork_per_protein=int(payload.get("max_foodnetwork_per_protein", 2)),
+        min_non_foodnetwork_count=int(payload.get("min_non_foodnetwork_count", 4)),
         min_trusted_ratio=float(payload.get("min_trusted_ratio", 0.3)),
     )
