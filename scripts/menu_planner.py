@@ -68,6 +68,7 @@ class RecipeCandidate:
     prep_minutes: int
     healthy: bool
     sale_item_matches: tuple[str, ...]
+    extraction_confidence: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,7 @@ class PlannerConfig:
     max_per_protein: int = 3
     max_per_cuisine: int = 4
     max_per_source_domain: int = 10
+    max_foodnetwork_per_protein: int = 2
     min_trusted_ratio: float = 0.3
 
 
@@ -155,8 +157,10 @@ def score_candidate(candidate: RecipeCandidate) -> RankedRecipe:
     ease_boost = max(0, 45 - candidate.prep_minutes) / 45 * 0.05
     trusted_source = _normalize(candidate.source_domain) in TRUSTED_SOURCES
     trusted_boost = 0.05 if trusted_source else 0.0
+    confidence = max(0.0, min(1.0, float(candidate.extraction_confidence)))
+    confidence_boost = confidence * 0.03
 
-    score = normalized_rating * vote_weight + sale_boost + ease_boost + trusted_boost
+    score = normalized_rating * vote_weight + sale_boost + ease_boost + trusted_boost + confidence_boost
     return RankedRecipe(candidate=candidate, score=score, trusted_source=trusted_source)
 
 
@@ -187,9 +191,11 @@ def enforce_diversity(
     by_protein: dict[str, int] = {}
     by_cuisine: dict[str, int] = {}
     by_domain: dict[str, int] = {}
+    by_domain_protein: dict[tuple[str, str], int] = {}
     max_per_protein = active_config.max_per_protein
     max_per_cuisine = active_config.max_per_cuisine
     max_per_domain = active_config.max_per_source_domain
+    max_foodnetwork_per_protein = active_config.max_foodnetwork_per_protein
 
     def can_select(
         protein_key: str,
@@ -206,6 +212,10 @@ def enforce_diversity(
             return False
         if enforce_domain_cap and by_domain.get(domain_key, 0) >= max_per_domain:
             return False
+        if domain_key == "foodnetwork.com":
+            domain_protein_key = (domain_key, protein_key)
+            if by_domain_protein.get(domain_protein_key, 0) >= max_foodnetwork_per_protein:
+                return False
         return True
 
     selected_ids: set[str] = set()
@@ -239,6 +249,8 @@ def enforce_diversity(
             by_protein[protein_key] = by_protein.get(protein_key, 0) + 1
             by_cuisine[cuisine_key] = by_cuisine.get(cuisine_key, 0) + 1
             by_domain[domain_key] = by_domain.get(domain_key, 0) + 1
+            domain_protein_key = (domain_key, protein_key)
+            by_domain_protein[domain_protein_key] = by_domain_protein.get(domain_protein_key, 0) + 1
 
     # Prefer strong diversity first, then progressively relax caps to fill target_count.
     add_candidates(enforce_protein_cap=True, enforce_cuisine_cap=True, enforce_domain_cap=True)

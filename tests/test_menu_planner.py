@@ -86,6 +86,25 @@ class MenuPlannerTests(unittest.TestCase):
         high_score = score_candidate(high_votes_slightly_lower_rating).score
         self.assertGreater(high_score, low_score)
 
+    def test_confidence_boost_prefers_higher_confidence_extraction(self) -> None:
+        low_conf = make_candidate(
+            idx=30,
+            cuisine="Italian",
+            protein="chicken",
+            rating=4.4,
+            vote_count=120,
+        )
+        high_conf = make_candidate(
+            idx=31,
+            cuisine="Italian",
+            protein="chicken",
+            rating=4.4,
+            vote_count=120,
+        )
+        low_conf = RecipeCandidate(**{**low_conf.__dict__, "extraction_confidence": 0.75})
+        high_conf = RecipeCandidate(**{**high_conf.__dict__, "extraction_confidence": 1.0})
+        self.assertGreater(score_candidate(high_conf).score, score_candidate(low_conf).score)
+
     def test_diversity_caps_reduce_single_protein_domination(self) -> None:
         chicken_heavy = [
             make_candidate(idx=i, cuisine="Italian", protein="chicken", vote_count=300 + i)
@@ -163,6 +182,27 @@ class MenuPlannerTests(unittest.TestCase):
         proteins = [item.candidate.protein.lower() for item in result]
         # Expect mixed sequence rather than all chicken first.
         self.assertNotEqual(proteins[:3], ["chicken", "chicken", "chicken"])
+
+    def test_caps_foodnetwork_to_two_per_protein(self) -> None:
+        candidates = [
+            make_candidate(idx=1, cuisine="Italian", protein="chicken", source_domain="foodnetwork.com", vote_count=500),
+            make_candidate(idx=2, cuisine="Italian", protein="chicken", source_domain="foodnetwork.com", vote_count=490),
+            make_candidate(idx=3, cuisine="Italian", protein="chicken", source_domain="foodnetwork.com", vote_count=480),
+            make_candidate(idx=4, cuisine="American", protein="beef", source_domain="foodnetwork.com", vote_count=470),
+            make_candidate(idx=5, cuisine="American", protein="beef", source_domain="foodnetwork.com", vote_count=460),
+            make_candidate(idx=6, cuisine="American", protein="beef", source_domain="foodnetwork.com", vote_count=450),
+            make_candidate(idx=7, cuisine="Greek", protein="lamb", source_domain="allrecipes.com", vote_count=440),
+            make_candidate(idx=8, cuisine="Mexican", protein="pork", source_domain="allrecipes.com", vote_count=430),
+        ]
+
+        result = plan_weekly_menu(candidates, target_count=8)
+        by_domain_protein: dict[tuple[str, str], int] = {}
+        for item in result:
+            key = (item.candidate.source_domain.lower(), item.candidate.protein.lower())
+            by_domain_protein[key] = by_domain_protein.get(key, 0) + 1
+
+        self.assertLessEqual(by_domain_protein.get(("foodnetwork.com", "chicken"), 0), 2)
+        self.assertLessEqual(by_domain_protein.get(("foodnetwork.com", "beef"), 0), 2)
 
 
 if __name__ == "__main__":

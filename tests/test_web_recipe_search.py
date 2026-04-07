@@ -6,11 +6,54 @@ from scripts.web_recipe_search import (
     WebRecipeSearchAdapter,
     WebSearchConfig,
     _extract_rss_links,
+    _parse_recipe_heuristic,
+    _parse_recipe_microdata,
     _parse_recipe_json_ld,
 )
 
 
 class WebRecipeSearchTests(unittest.TestCase):
+    def test_parse_recipe_microdata_parses_valid_recipe(self) -> None:
+        html_page = """
+        <html><head>
+          <title>Skillet Salmon</title>
+          <meta itemprop="ratingValue" content="4.5" />
+          <meta itemprop="ratingCount" content="120" />
+          <meta itemprop="recipeCuisine" content="American" />
+          <meta itemprop="totalTime" content="PT25M" />
+          <meta itemprop="recipeIngredient" content="salmon fillet" />
+          <meta itemprop="recipeIngredient" content="garlic" />
+        </head><body></body></html>
+        """
+        doc = _parse_recipe_microdata(html_page, "https://example.com/recipe/salmon")
+        self.assertIsNotNone(doc)
+        assert doc is not None
+        self.assertEqual(doc.protein, "salmon")
+        self.assertEqual(doc.rating, 4.5)
+        self.assertEqual(doc.vote_count, 120)
+        self.assertEqual(doc.extraction_method, "microdata")
+
+    def test_parse_recipe_heuristic_parses_rating_and_ingredients(self) -> None:
+        html_page = """
+        <html><head>
+          <title>Garlic Shrimp Pasta</title>
+          <script>
+            window.__STATE__ = {"ratingValue":"4.4","reviewCount":"245"}
+          </script>
+        </head>
+        <body>
+          <li class="ingredients-item">1 lb shrimp</li>
+          <li class="ingredients-item">2 cloves garlic</li>
+          <li class="ingredients-item">8 oz pasta</li>
+        </body></html>
+        """
+        doc = _parse_recipe_heuristic(html_page, "https://example.com/recipe/shrimp")
+        self.assertIsNotNone(doc)
+        assert doc is not None
+        self.assertEqual(doc.protein, "shrimp")
+        self.assertEqual(doc.vote_count, 245)
+        self.assertEqual(doc.extraction_method, "heuristic")
+
     def test_parse_recipe_json_ld_infers_seafood_protein_from_title(self) -> None:
         payload = {
             "@context": "https://schema.org",
@@ -81,7 +124,14 @@ class WebRecipeSearchTests(unittest.TestCase):
                 return xml
             return html_page
 
-        adapter = WebRecipeSearchAdapter(fetch_text=fake_fetch)
+        adapter = WebRecipeSearchAdapter(
+            config=WebSearchConfig(
+                trusted_domains=("allrecipes.com", "foodnetwork.com"),
+                random_domain_count=2,
+                max_links=10,
+            ),
+            fetch_text=fake_fetch,
+        )
         docs = adapter.search((SaleItem(name="chicken", price_text="$1.99", category="protein"),))
         self.assertEqual(len(docs), 2)
         self.assertEqual(docs[0].title, "Test Chicken Recipe")
@@ -218,6 +268,67 @@ class WebRecipeSearchTests(unittest.TestCase):
         selected_domains = adapter.last_stats.get("selected_domains") or []
         self.assertEqual(len(selected_domains), 2)
         self.assertTrue(set(selected_domains).issubset({"allrecipes.com", "foodnetwork.com", "eatingwell.com"}))
+
+    def test_search_uses_microdata_when_json_ld_missing(self) -> None:
+        xml = """
+        <rss><channel>
+          <item><link>https://allrecipes.com/recipe/12345/real-recipe</link></item>
+        </channel></rss>
+        """
+        html_page = """
+        <html><head>
+          <title>Turkey Skillet</title>
+          <meta itemprop="ratingValue" content="4.4" />
+          <meta itemprop="ratingCount" content="88" />
+          <meta itemprop="recipeIngredient" content="ground turkey" />
+          <meta itemprop="recipeIngredient" content="onion" />
+        </head><body></body></html>
+        """
+
+        def fake_fetch(url: str) -> str:
+            if "bing.com/search?format=rss" in url:
+                return xml
+            return html_page
+
+        adapter = WebRecipeSearchAdapter(
+            config=WebSearchConfig(trusted_domains=("allrecipes.com",), max_links=5),
+            fetch_text=fake_fetch,
+        )
+        docs = adapter.search((SaleItem(name="turkey", price_text="$2.99", category="protein"),))
+        self.assertEqual(len(docs), 1)
+        self.assertEqual(docs[0].protein, "turkey")
+        self.assertEqual(docs[0].extraction_method, "microdata")
+
+    def test_search_uses_heuristic_when_json_ld_and_microdata_missing(self) -> None:
+        xml = """
+        <rss><channel>
+          <item><link>https://allrecipes.com/recipe/12345/real-recipe</link></item>
+        </channel></rss>
+        """
+        html_page = """
+        <html><head>
+          <title>Weeknight Beef Skillet</title>
+          <script>var rating={"ratingValue":"4.6","ratingCount":"312"}</script>
+        </head><body>
+          <li class="ingredients-item">1 lb beef</li>
+          <li class="ingredients-item">1 onion</li>
+          <li class="ingredients-item">salt</li>
+        </body></html>
+        """
+
+        def fake_fetch(url: str) -> str:
+            if "bing.com/search?format=rss" in url:
+                return xml
+            return html_page
+
+        adapter = WebRecipeSearchAdapter(
+            config=WebSearchConfig(trusted_domains=("allrecipes.com",), max_links=5),
+            fetch_text=fake_fetch,
+        )
+        docs = adapter.search((SaleItem(name="beef", price_text="$4.99", category="protein"),))
+        self.assertEqual(len(docs), 1)
+        self.assertEqual(docs[0].protein, "beef")
+        self.assertEqual(docs[0].extraction_method, "heuristic")
 
 
 if __name__ == "__main__":

@@ -21,6 +21,8 @@ class RecipeDocument:
     vote_count: int
     prep_minutes: int
     healthy: bool
+    extraction_method: str = "unknown"
+    extraction_confidence: float = 1.0
 
 
 class RecipeSearchAdapter(Protocol):
@@ -63,6 +65,7 @@ def documents_to_candidates(
                 prep_minutes=doc.prep_minutes,
                 healthy=doc.healthy,
                 sale_item_matches=sale_matches,
+                extraction_confidence=doc.extraction_confidence,
             )
         )
 
@@ -126,6 +129,8 @@ class JsonFixtureRecipeSearchAdapter:
                     vote_count=int(item["vote_count"]),
                     prep_minutes=int(item["prep_minutes"]),
                     healthy=bool(item["healthy"]),
+                    extraction_method=str(item.get("extraction_method") or "fixture"),
+                    extraction_confidence=float(item.get("extraction_confidence", 1.0)),
                 )
             )
 

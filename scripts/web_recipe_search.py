@@ -103,6 +103,26 @@ def _extract_json_ld_blocks(html: str) -> list[str]:
     return re.findall(pattern, html, flags=re.IGNORECASE | re.DOTALL)
 
 
+def _extract_meta_content(html_text: str, *, attr: str, value: str) -> str | None:
+    pattern = rf'<meta[^>]*{attr}=["\']{re.escape(value)}["\'][^>]*content=["\']([^"\']+)["\'][^>]*>'
+    match = re.search(pattern, html_text, flags=re.IGNORECASE)
+    if match:
+        return html.unescape(match.group(1)).strip()
+    return None
+
+
+def _extract_title_from_html(html_text: str) -> str:
+    og_title = _extract_meta_content(html_text, attr="property", value="og:title")
+    if og_title:
+        return og_title
+    title_match = re.search(r"<title[^>]*>(.*?)</title>", html_text, flags=re.IGNORECASE | re.DOTALL)
+    if title_match:
+        raw = re.sub(r"\s+", " ", title_match.group(1)).strip()
+        if raw:
+            return html.unescape(raw)
+    return "Unknown Recipe"
+
+
 def _to_minutes(total_time: str) -> int:
     if not total_time:
         return 45
@@ -188,6 +208,157 @@ def _parse_recipe_json_ld(payload: object, url: str) -> RecipeDocument | None:
         vote_count=vote_count,
         prep_minutes=total_time,
         healthy=True,
+        extraction_method="json-ld",
+        extraction_confidence=1.0,
+    )
+
+
+def _parse_recipe_microdata(html_text: str, url: str) -> RecipeDocument | None:
+    ingredient_meta = re.findall(
+        r'<meta[^>]*itemprop=["\']recipeIngredient["\'][^>]*content=["\']([^"\']+)["\'][^>]*>',
+        html_text,
+        flags=re.IGNORECASE,
+    )
+    ingredient_text = re.findall(
+        r'<[^>]*itemprop=["\']recipeIngredient["\'][^>]*>(.*?)</[^>]+>',
+        html_text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    ingredients_raw = [*ingredient_meta, *ingredient_text]
+    ingredients = tuple(
+        item
+        for item in (
+            re.sub(r"<[^>]+>", " ", html.unescape(raw)).strip()
+            for raw in ingredients_raw
+        )
+        if item
+    )
+
+    rating_raw = None
+    rating_count_raw = None
+    for token in ("ratingValue",):
+        rating_raw = _extract_meta_content(html_text, attr="itemprop", value=token)
+        if rating_raw:
+            break
+    for token in ("ratingCount", "reviewCount"):
+        rating_count_raw = _extract_meta_content(html_text, attr="itemprop", value=token)
+        if rating_count_raw:
+            break
+
+    if not rating_raw:
+        rating_match = re.search(
+            r'itemprop=["\']ratingValue["\'][^>]*>([^<]+)<',
+            html_text,
+            flags=re.IGNORECASE,
+        )
+        if rating_match:
+            rating_raw = rating_match.group(1).strip()
+    if not rating_count_raw:
+        count_match = re.search(
+            r'itemprop=["\'](?:ratingCount|reviewCount)["\'][^>]*>([^<]+)<',
+            html_text,
+            flags=re.IGNORECASE,
+        )
+        if count_match:
+            rating_count_raw = count_match.group(1).strip()
+
+    try:
+        rating = float(str(rating_raw or "").strip())
+        vote_count = int(float(str(rating_count_raw or "").strip()))
+    except (TypeError, ValueError):
+        return None
+
+    if vote_count <= 0:
+        return None
+
+    cuisine = _extract_meta_content(html_text, attr="itemprop", value="recipeCuisine") or "Unknown"
+    total_time = _extract_meta_content(html_text, attr="itemprop", value="totalTime") or ""
+    title = _extract_meta_content(html_text, attr="itemprop", value="name") or _extract_title_from_html(html_text)
+    protein = _infer_protein(ingredients, title)
+
+    return RecipeDocument(
+        title=title,
+        url=url,
+        cuisine=cuisine,
+        protein=protein,
+        ingredients=ingredients,
+        rating=rating,
+        vote_count=vote_count,
+        prep_minutes=_to_minutes(total_time),
+        healthy=True,
+        extraction_method="microdata",
+        extraction_confidence=0.9,
+    )
+
+
+def _parse_recipe_heuristic(html_text: str, url: str) -> RecipeDocument | None:
+    title = _extract_title_from_html(html_text)
+
+    rating_matchers = [
+        r'"ratingValue"\s*:\s*"?(?P<value>[0-9]+(?:\.[0-9]+)?)"?',
+        r'data-rating=["\'](?P<value>[0-9]+(?:\.[0-9]+)?)["\']',
+    ]
+    count_matchers = [
+        r'"(?:ratingCount|reviewCount)"\s*:\s*"?(?P<value>[0-9,]+)"?',
+        r'(?P<value>[0-9,]+)\s+(?:ratings|reviews)\b',
+    ]
+
+    rating_raw = None
+    vote_count_raw = None
+    for pattern in rating_matchers:
+        match = re.search(pattern, html_text, flags=re.IGNORECASE)
+        if match:
+            rating_raw = match.group("value")
+            break
+    for pattern in count_matchers:
+        match = re.search(pattern, html_text, flags=re.IGNORECASE)
+        if match:
+            vote_count_raw = match.group("value")
+            break
+
+    if not rating_raw or not vote_count_raw:
+        return None
+
+    try:
+        rating = float(str(rating_raw).replace(",", "").strip())
+        vote_count = int(float(str(vote_count_raw).replace(",", "").strip()))
+    except (TypeError, ValueError):
+        return None
+    if vote_count <= 0:
+        return None
+
+    ingredient_matches = re.findall(
+        r"<(?:li|span|div)[^>]*(?:ingredient|recipe-ingredient|ingredients-item)[^>]*>(.*?)</(?:li|span|div)>",
+        html_text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    ingredients = tuple(
+        item
+        for item in (
+            re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(raw))).strip()
+            for raw in ingredient_matches
+        )
+        if item and len(item) > 1
+    )
+
+    if len(ingredients) < 2:
+        return None
+
+    cuisine = _extract_meta_content(html_text, attr="property", value="og:site_name") or "Unknown"
+    total_time = _extract_meta_content(html_text, attr="itemprop", value="totalTime") or ""
+    protein = _infer_protein(ingredients, title)
+    return RecipeDocument(
+        title=title,
+        url=url,
+        cuisine=cuisine,
+        protein=protein,
+        ingredients=ingredients,
+        rating=rating,
+        vote_count=vote_count,
+        prep_minutes=_to_minutes(total_time),
+        healthy=True,
+        extraction_method="heuristic",
+        extraction_confidence=0.75,
     )
 
 
@@ -340,6 +511,14 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
 
         blocks = _extract_json_ld_blocks(html)
         if not blocks:
+            parsed_microdata = _parse_recipe_microdata(html, url)
+            if parsed_microdata:
+                self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+                return parsed_microdata
+            parsed_heuristic = _parse_recipe_heuristic(html, url)
+            if parsed_heuristic:
+                self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+                return parsed_heuristic
             self.last_stats["pages_no_jsonld"] = int(self.last_stats["pages_no_jsonld"]) + 1
             return None
 
@@ -364,6 +543,14 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
                     ) + 1
         if saw_non_recipe:
             self.last_stats["pages_non_recipe_jsonld"] = int(self.last_stats["pages_non_recipe_jsonld"]) + 1
+        parsed_microdata = _parse_recipe_microdata(html, url)
+        if parsed_microdata:
+            self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+            return parsed_microdata
+        parsed_heuristic = _parse_recipe_heuristic(html, url)
+        if parsed_heuristic:
+            self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+            return parsed_heuristic
         return None
 
     def search(self, sale_items: tuple[SaleItem, ...]) -> list[RecipeDocument]:
@@ -458,6 +645,14 @@ class PlaywrightRecipeSearchAdapter(WebRecipeSearchAdapter):
 
         blocks = _extract_json_ld_blocks(html)
         if not blocks:
+            parsed_microdata = _parse_recipe_microdata(html, url)
+            if parsed_microdata:
+                self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+                return parsed_microdata
+            parsed_heuristic = _parse_recipe_heuristic(html, url)
+            if parsed_heuristic:
+                self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+                return parsed_heuristic
             self.last_stats["pages_no_jsonld"] = int(self.last_stats["pages_no_jsonld"]) + 1
             return None
 
@@ -482,4 +677,12 @@ class PlaywrightRecipeSearchAdapter(WebRecipeSearchAdapter):
                     ) + 1
         if saw_non_recipe:
             self.last_stats["pages_non_recipe_jsonld"] = int(self.last_stats["pages_non_recipe_jsonld"]) + 1
+        parsed_microdata = _parse_recipe_microdata(html, url)
+        if parsed_microdata:
+            self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+            return parsed_microdata
+        parsed_heuristic = _parse_recipe_heuristic(html, url)
+        if parsed_heuristic:
+            self.last_stats["pages_parsed"] = int(self.last_stats["pages_parsed"]) + 1
+            return parsed_heuristic
         return None

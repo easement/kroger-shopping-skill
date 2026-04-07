@@ -36,6 +36,8 @@ def _docs_to_fixture(docs: list[RecipeDocument]) -> list[dict[str, object]]:
             "vote_count": doc.vote_count,
             "prep_minutes": doc.prep_minutes,
             "healthy": doc.healthy,
+            "extraction_method": doc.extraction_method,
+            "extraction_confidence": doc.extraction_confidence,
         }
         for doc in docs
     ]
