@@ -82,6 +82,14 @@ Validate inputs only:
 python3 -m scripts.run_weekly_plan --validate-only --search-mode fixture --recipe-fixture fixtures/recipes.sample.json --ad-fixture fixtures/ad.sample.json
 ```
 
+## Building for Claude Desktop
+
+Create a zip for upload to Claude Desktop (excludes `node_modules/`, `.git/`, `runs/`, and `.DS_Store`):
+
+```bash
+zip -r ~/Desktop/grocery-weekly-menu-skill.zip . -x "node_modules/*" -x ".git/*" -x ".DS_Store" -x "scripts/.DS_Store" -x "tests/.DS_Store" -x "runs/*"
+```
+
 ## Docs
 
 - Detailed implementation + debugging guide: `docs/DEVELOPMENT.md`
