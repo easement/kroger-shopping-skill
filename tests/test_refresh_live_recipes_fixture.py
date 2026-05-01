@@ -1,7 +1,11 @@
 import unittest
 
 from scripts.recipe_search import RecipeDocument
-from scripts.refresh_live_recipes_fixture import _select_fresh_docs, _select_with_backfill
+from scripts.refresh_live_recipes_fixture import (
+    _exclude_rotating_urls_only,
+    _select_fresh_docs,
+    _select_with_backfill,
+)
 
 
 class RefreshLiveRecipesFixtureTests(unittest.TestCase):
@@ -136,6 +140,26 @@ class RefreshLiveRecipesFixtureTests(unittest.TestCase):
         excluded = {doc.url for doc in docs}
         selected, _ = _select_with_backfill(docs=docs, excluded_urls=excluded, target_count=1)
         self.assertEqual(selected[0].url, "https://allrecipes.com/r/1")
+
+    def test_coverage_urls_are_not_excluded_by_weekly_rotation(self) -> None:
+        coverage_docs = [
+            RecipeDocument(
+                title="Coverage",
+                url="https://example.com/coverage",
+                cuisine="American",
+                protein="beef",
+                ingredients=("ground beef",),
+                rating=4.2,
+                vote_count=25,
+                prep_minutes=25,
+                healthy=True,
+            )
+        ]
+        excluded = {"https://example.com/coverage", "https://example.com/rotating"}
+
+        filtered = _exclude_rotating_urls_only(excluded, coverage_docs)
+
+        self.assertEqual(filtered, {"https://example.com/rotating"})
 
 
 if __name__ == "__main__":

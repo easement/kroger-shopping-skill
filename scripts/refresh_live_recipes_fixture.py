@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from scripts.ad_capture import SaleItem
+from scripts.recipe_coverage import coverage_recipe_docs
 from scripts.recipe_search import RecipeDocument
 from scripts.web_recipe_search import PlaywrightRecipeSearchAdapter, WebRecipeSearchAdapter, WebSearchConfig
 
@@ -95,9 +96,22 @@ def _seed_sale_item_batches() -> tuple[tuple[SaleItem, ...], ...]:
         "tuna",
         "ground beef",
         "chicken breast",
+        "chicken wings",
+        "pork shoulder",
+        "pork butt",
         "pork tenderloin",
+        "ribs",
+        "sausage",
     )
     return tuple((SaleItem(name=name, price_text="N/A", category="seed"),) for name in names)
+
+
+def _exclude_rotating_urls_only(
+    excluded_urls: set[str],
+    coverage_docs: list[RecipeDocument],
+) -> set[str]:
+    coverage_urls = {doc.url for doc in coverage_docs if doc.url}
+    return {url for url in excluded_urls if url not in coverage_urls}
 
 
 def _select_fresh_docs(
@@ -174,9 +188,16 @@ def main() -> int:
     last_week_path = Path(args.last_week)
     previous_output_docs = _load_fixture_docs(output_path)
 
-    excluded_urls = _load_fixture_urls(last_week_path)
+    coverage_docs = coverage_recipe_docs()
+    excluded_urls = _exclude_rotating_urls_only(_load_fixture_urls(last_week_path), coverage_docs)
     all_docs: list[RecipeDocument] = []
     seen_urls: set[str] = set()
+    for doc in coverage_docs:
+        url = (doc.url or "").strip()
+        if not url or url in seen_urls:
+            continue
+        seen_urls.add(url)
+        all_docs.append(doc)
     stats_by_batch: list[dict[str, object] | None] = []
     for seed_batch in _seed_sale_item_batches():
         config = WebSearchConfig(max_links=args.max_links)

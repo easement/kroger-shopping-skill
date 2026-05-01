@@ -1,5 +1,163 @@
 [
   {
+    "title": "Baked Ground Beef Tacos",
+    "url": "https://www.simplyrecipes.com/baked-ground-beef-tacos-recipe-8608247",
+    "cuisine": "Mexican",
+    "protein": "beef",
+    "ingredients": [
+      "1 pound 90% lean ground beef",
+      "taco seasoning",
+      "whole wheat flour tortillas",
+      "shredded cheddar cheese",
+      "diced tomatoes",
+      "romaine lettuce"
+    ],
+    "rating": 4.2,
+    "vote_count": 25,
+    "prep_minutes": 25,
+    "healthy": true,
+    "extraction_method": "curated-coverage",
+    "extraction_confidence": 0.85
+  },
+  {
+    "title": "Crispy Ground Beef Tacos",
+    "url": "https://www.simplyrecipes.com/crispy-ground-beef-tacos-recipe-8631030",
+    "cuisine": "Mexican",
+    "protein": "beef",
+    "ingredients": [
+      "ground beef",
+      "corn tortillas",
+      "taco seasoning",
+      "shredded cheese",
+      "lettuce",
+      "salsa"
+    ],
+    "rating": 4.2,
+    "vote_count": 25,
+    "prep_minutes": 40,
+    "healthy": true,
+    "extraction_method": "curated-coverage",
+    "extraction_confidence": 0.85
+  },
+  {
+    "title": "Cajun Butter Shrimp and Sausage Skewers",
+    "url": "https://www.delish.com/cooking/recipe-ideas/a28576081/cajun-butter-shrimp-sausage-skewers-recipe/",
+    "cuisine": "Cajun",
+    "protein": "shrimp",
+    "ingredients": [
+      "1 lb shrimp, peeled and deveined",
+      "andouille sausage",
+      "melted butter",
+      "lemon juice",
+      "smoked paprika",
+      "garlic powder"
+    ],
+    "rating": 4.3,
+    "vote_count": 25,
+    "prep_minutes": 35,
+    "healthy": true,
+    "extraction_method": "curated-coverage",
+    "extraction_confidence": 0.85
+  },
+  {
+    "title": "Pork Steaks",
+    "url": "https://www.allrecipes.com/recipe/70463/pork-steaks/",
+    "cuisine": "American",
+    "protein": "pork",
+    "ingredients": [
+      "pork shoulder steaks",
+      "butter",
+      "soy sauce",
+      "green onions",
+      "garlic powder"
+    ],
+    "rating": 4.2,
+    "vote_count": 100,
+    "prep_minutes": 45,
+    "healthy": true,
+    "extraction_method": "curated-coverage",
+    "extraction_confidence": 0.85
+  },
+  {
+    "title": "Juicy Butt Steaks",
+    "url": "https://www.allrecipes.com/recipe/109639/juicy-butt-steaks/",
+    "cuisine": "American",
+    "protein": "pork",
+    "ingredients": [
+      "pork butt steaks",
+      "steak seasoning",
+      "worcestershire sauce",
+      "garlic",
+      "black pepper"
+    ],
+    "rating": 4.2,
+    "vote_count": 100,
+    "prep_minutes": 35,
+    "healthy": true,
+    "extraction_method": "curated-coverage",
+    "extraction_confidence": 0.85
+  },
+  {
+    "title": "Instant Pot Ribs",
+    "url": "https://www.delish.com/cooking/recipe-ideas/a27044004/instant-pot-ribs-recipe/",
+    "cuisine": "American",
+    "protein": "ribs",
+    "ingredients": [
+      "baby back ribs",
+      "barbecue sauce",
+      "brown sugar",
+      "paprika",
+      "garlic powder",
+      "apple cider vinegar"
+    ],
+    "rating": 4.2,
+    "vote_count": 50,
+    "prep_minutes": 45,
+    "healthy": true,
+    "extraction_method": "curated-coverage",
+    "extraction_confidence": 0.85
+  },
+  {
+    "title": "Italian Sausage, Peppers, and Onions",
+    "url": "https://www.allrecipes.com/recipe/76808/italian-sausage-peppers-and-onions/",
+    "cuisine": "Italian",
+    "protein": "sausage",
+    "ingredients": [
+      "Italian sausage links",
+      "bell peppers",
+      "onions",
+      "tomato paste",
+      "garlic",
+      "Italian seasoning"
+    ],
+    "rating": 4.5,
+    "vote_count": 1000,
+    "prep_minutes": 45,
+    "healthy": true,
+    "extraction_method": "curated-coverage",
+    "extraction_confidence": 0.85
+  },
+  {
+    "title": "Baked Chicken Wings",
+    "url": "https://www.allrecipes.com/recipe/187822/baked-chicken-wings/",
+    "cuisine": "American",
+    "protein": "chicken",
+    "ingredients": [
+      "chicken wings",
+      "olive oil",
+      "garlic powder",
+      "chili powder",
+      "salt",
+      "black pepper"
+    ],
+    "rating": 4.4,
+    "vote_count": 1000,
+    "prep_minutes": 45,
+    "healthy": true,
+    "extraction_method": "curated-coverage",
+    "extraction_confidence": 0.85
+  },
+  {
     "title": "Pork Carnitas",
     "url": "https://www.foodnetwork.com/recipes/pork-carnitas-13692537",
     "cuisine": "Unknown",
