@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from scripts.run_weekly_plan import _group_meals_by_protein, _meal_prefix_and_price
+from scripts.run_weekly_plan import _build_ad_adapter, _group_meals_by_protein, _meal_prefix_and_price
 
 
 class RunWeeklyPlanCliTests(unittest.TestCase):
@@ -32,6 +32,24 @@ class RunWeeklyPlanCliTests(unittest.TestCase):
         )
         self.assertEqual(main, "Turkey")
         self.assertEqual(price, "$12.49")
+
+    def test_build_playwright_ad_adapter_accepts_browser_session_options(self) -> None:
+        adapter = _build_ad_adapter(
+            location_id="01100459",
+            use_failed_capture=False,
+            ad_fixture_path=None,
+            ad_mode="playwright",
+            kroger_browser_profile_dir="/tmp/kroger-profile",
+            kroger_browser_headless=False,
+            kroger_browser_post_load_wait_ms=9000,
+            kroger_browser_channel="chrome",
+        )
+
+        config = adapter._config
+        self.assertEqual(config.browser_profile_dir, "/tmp/kroger-profile")
+        self.assertFalse(config.browser_headless)
+        self.assertEqual(config.browser_post_load_wait_ms, 9000)
+        self.assertEqual(config.browser_channel, "chrome")
 
     def test_cli_replay_captures_dir_returns_stats(self) -> None:
         root = Path(__file__).resolve().parents[1]

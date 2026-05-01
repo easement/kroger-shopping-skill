@@ -64,6 +64,18 @@ class MenuPlannerTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].candidate.url, "https://example.com/meal-1")
 
+    def test_candidates_without_sale_item_matches_are_excluded(self) -> None:
+        candidates = [
+            make_candidate(idx=1, cuisine="Italian", protein="chicken", sale_item_matches=()),
+            make_candidate(idx=2, cuisine="Mexican", protein="beef", sale_item_matches=("beef",)),
+        ]
+
+        result, diagnostics = plan_weekly_menu_with_diagnostics(candidates, target_count=2)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].candidate.url, "https://example.com/meal-2")
+        self.assertEqual(diagnostics.insufficient_reason, "insufficient_eligible_candidates")
+
     def test_weighted_score_favors_high_vote_count(self) -> None:
         low_votes_high_rating = make_candidate(
             idx=10,

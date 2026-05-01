@@ -14,7 +14,12 @@ from scripts.menu_planner import (
     RankedRecipe,
     plan_weekly_menu_with_diagnostics,
 )
-from scripts.recipe_search import RecipeDocument, RecipeSearchAdapter, documents_to_candidates
+from scripts.recipe_search import (
+    RecipeDocument,
+    RecipeSearchAdapter,
+    documents_to_candidates,
+    sale_item_recipe_anchors,
+)
 
 
 @dataclass(frozen=True)
@@ -23,6 +28,32 @@ class PipelineResult:
     ad_context: AdCaptureResult
     used_manual_fallback: bool
     diagnostics: PlanningDiagnostics | None = None
+
+
+def _fail_if_no_usable_sale_items(ad_context: AdCaptureResult) -> AdCaptureResult:
+    if not ad_context.success:
+        return ad_context
+
+    if not ad_context.sale_items:
+        return AdCaptureResult(
+            success=False,
+            location_id=ad_context.location_id,
+            sale_items=(),
+            source=ad_context.source,
+            message="no_sale_items_captured",
+        )
+
+    has_recipe_anchor = any(sale_item_recipe_anchors(item.name) for item in ad_context.sale_items)
+    if has_recipe_anchor:
+        return ad_context
+
+    return AdCaptureResult(
+        success=False,
+        location_id=ad_context.location_id,
+        sale_items=ad_context.sale_items,
+        source=ad_context.source,
+        message="no_recipe_relevant_sale_items_captured",
+    )
 
 
 def run_menu_pipeline(
@@ -35,6 +66,7 @@ def run_menu_pipeline(
     planner_config: PlannerConfig | None = None,
 ) -> PipelineResult:
     ad_context = ad_adapter.capture_weekly_ad(location_id=location_id)
+    ad_context = _fail_if_no_usable_sale_items(ad_context)
     used_manual_fallback = False
 
     if not ad_context.success:
@@ -49,6 +81,13 @@ def run_menu_pipeline(
             manual_items=manual_fallback_items,
             location_id=location_id,
         )
+        ad_context = _fail_if_no_usable_sale_items(ad_context)
+        if not ad_context.success:
+            return PipelineResult(
+                meals=(),
+                ad_context=ad_context,
+                used_manual_fallback=True,
+            )
         used_manual_fallback = True
 
     candidates = documents_to_candidates(docs=recipe_docs, sale_items=ad_context.sale_items)
@@ -75,6 +114,7 @@ def run_menu_pipeline_with_search(
     planner_config: PlannerConfig | None = None,
 ) -> PipelineResult:
     ad_context = ad_adapter.capture_weekly_ad(location_id=location_id)
+    ad_context = _fail_if_no_usable_sale_items(ad_context)
     used_manual_fallback = False
 
     if not ad_context.success:
@@ -89,6 +129,13 @@ def run_menu_pipeline_with_search(
             manual_items=manual_fallback_items,
             location_id=location_id,
         )
+        ad_context = _fail_if_no_usable_sale_items(ad_context)
+        if not ad_context.success:
+            return PipelineResult(
+                meals=(),
+                ad_context=ad_context,
+                used_manual_fallback=True,
+            )
         used_manual_fallback = True
 
     recipe_docs = recipe_search_adapter.search(ad_context.sale_items)

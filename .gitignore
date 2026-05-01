@@ -208,6 +208,7 @@ __marimo__/
 
 # Project runtime outputs
 runs/
+.kroger-browser-profile/
 
 # Local/live request header captures (sensitive browser-derived values)
 fixtures/kroger_extra_headers.live.json
@@ -216,3 +217,5 @@ fixtures/*extra_headers*.live.json
 # Node dependencies and local npm logs
 node_modules/
 npm-debug.log*
+# Local Finder metadata
+.DS_Store

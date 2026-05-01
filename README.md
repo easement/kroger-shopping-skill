@@ -76,6 +76,21 @@ python3 -m scripts.run_weekly_plan \
   --target-count 10
 ```
 
+Browser-assisted Kroger capture from a persistent profile:
+
+```bash
+python3 -m scripts.run_weekly_plan \
+  --ad-mode playwright \
+  --kroger-browser-profile-dir .kroger-browser-profile \
+  --kroger-headed \
+  --kroger-browser-channel chrome \
+  --search-mode fixture \
+  --recipe-fixture fixtures/recipes.live.json \
+  --target-count 10 \
+  --quality-gate \
+  --output-format meal-markdown
+```
+
 Validate inputs only:
 
 ```bash

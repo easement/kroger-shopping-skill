@@ -6,6 +6,7 @@ from scripts.web_recipe_search import (
     WebRecipeSearchAdapter,
     WebSearchConfig,
     _extract_rss_links,
+    _query_anchor_for_sale_anchor,
     _parse_recipe_heuristic,
     _parse_recipe_microdata,
     _parse_recipe_json_ld,
@@ -268,6 +269,45 @@ class WebRecipeSearchTests(unittest.TestCase):
         selected_domains = adapter.last_stats.get("selected_domains") or []
         self.assertEqual(len(selected_domains), 2)
         self.assertTrue(set(selected_domains).issubset({"allrecipes.com", "foodnetwork.com", "eatingwell.com"}))
+
+    def test_search_builds_queries_from_normalized_sale_anchors(self) -> None:
+        queries: list[str] = []
+
+        def fake_fetch(url: str) -> str:
+            queries.append(url)
+            return "<rss><channel></channel></rss>"
+
+        adapter = WebRecipeSearchAdapter(
+            config=WebSearchConfig(
+                trusted_domains=("allrecipes.com",),
+                random_domain_count=1,
+                max_query_anchors=4,
+                use_relaxed_query_fallback=False,
+            ),
+            fetch_text=fake_fetch,
+        )
+        adapter.search(
+            (
+                SaleItem(
+                    name="Fresh Heritage Farm Boneless Chicken Breasts - or Wings, Bone-In, $2.99 lb",
+                    price_text="N/A",
+                    category="digital-ad-offer",
+                ),
+                SaleItem(
+                    name="Kroger 80% Lean Ground Beef - Sold in a 3 lb Roll",
+                    price_text="N/A",
+                    category="digital-ad-offer",
+                ),
+            )
+        )
+
+        joined_queries = " ".join(queries)
+        self.assertIn("chicken+breast", joined_queries)
+        self.assertIn("chicken+wings", joined_queries)
+        self.assertIn("ground+beef", joined_queries)
+
+    def test_query_anchor_normalizes_beef_patties_to_ground_beef(self) -> None:
+        self.assertEqual(_query_anchor_for_sale_anchor("beef patties"), "ground beef")
 
     def test_search_uses_microdata_when_json_ld_missing(self) -> None:
         xml = """

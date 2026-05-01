@@ -94,6 +94,7 @@ class PlannerConfig:
     max_foodnetwork_per_protein: int = 2
     min_non_foodnetwork_count: int = 4
     min_trusted_ratio: float = 0.3
+    require_sale_item_match: bool = True
 
 
 @dataclass(frozen=True)
@@ -143,6 +144,9 @@ def check_eligibility(candidate: RecipeCandidate, config: PlannerConfig | None =
 
     if _has_excluded_ingredient(candidate.ingredients):
         return EligibilityResult(eligible=False, reason="excluded_ingredient")
+
+    if active_config.require_sale_item_match and not candidate.sale_item_matches:
+        return EligibilityResult(eligible=False, reason="missing_sale_item_match")
 
     return EligibilityResult(eligible=True, reason="eligible")
 

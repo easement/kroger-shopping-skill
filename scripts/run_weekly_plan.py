@@ -193,6 +193,10 @@ def _build_ad_adapter(
     kroger_circular_id: str | None = None,
     kroger_cookie_header: str | None = None,
     kroger_extra_headers: dict[str, str] | None = None,
+    kroger_browser_profile_dir: str | None = None,
+    kroger_browser_headless: bool = True,
+    kroger_browser_post_load_wait_ms: int = 5000,
+    kroger_browser_channel: str | None = None,
     ad_fetch_wrapper: Callable[[str, dict[str, str]], str] | None = None,
     ad_fetch_json_wrapper: Callable[[str, dict[str, str]], object] | None = None,
 ) -> object:
@@ -223,6 +227,10 @@ def _build_ad_adapter(
                 circular_id=kroger_circular_id,
                 cookie_header=kroger_cookie_header,
                 extra_headers=kroger_extra_headers,
+                browser_profile_dir=kroger_browser_profile_dir,
+                browser_headless=kroger_browser_headless,
+                browser_post_load_wait_ms=kroger_browser_post_load_wait_ms,
+                browser_channel=kroger_browser_channel,
             )
         )
 
@@ -283,6 +291,28 @@ def main() -> int:
         help="Atlas weekly circular UUID; probes shoppable-weekly-deals/deals first. "
         "Fallback: env KROGER_CIRCULAR_ID or parse from weekly ad HTML when present.",
     )
+    parser.add_argument(
+        "--kroger-browser-profile-dir",
+        default=None,
+        help="Persistent Chromium profile directory for Playwright Kroger capture "
+        "(also env KROGER_BROWSER_PROFILE_DIR).",
+    )
+    parser.add_argument(
+        "--kroger-headed",
+        action="store_true",
+        help="Run Kroger Playwright capture with a visible browser window for session-assisted capture.",
+    )
+    parser.add_argument(
+        "--kroger-browser-post-load-wait-ms",
+        type=int,
+        default=5000,
+        help="Milliseconds to wait after Kroger weekly ad load so network deals responses can be intercepted.",
+    )
+    parser.add_argument(
+        "--kroger-browser-channel",
+        default=None,
+        help="Optional Playwright browser channel for Kroger capture, e.g. chrome.",
+    )
     parser.add_argument("--search-mode", choices=("fixture", "web", "playwright"), default="fixture")
     parser.add_argument("--web-max-links", type=int, default=20)
     parser.add_argument("--web-fallback-to-fixture", action="store_true")
@@ -308,6 +338,15 @@ def main() -> int:
     kroger_circular_id = args.kroger_circular_id or os.environ.get("KROGER_CIRCULAR_ID") or None
     if kroger_circular_id:
         kroger_circular_id = kroger_circular_id.strip() or None
+    kroger_browser_profile_dir = (
+        args.kroger_browser_profile_dir or os.environ.get("KROGER_BROWSER_PROFILE_DIR") or None
+    )
+    if kroger_browser_profile_dir:
+        kroger_browser_profile_dir = kroger_browser_profile_dir.strip() or None
+    kroger_browser_headless = not args.kroger_headed
+    kroger_browser_channel = args.kroger_browser_channel or os.environ.get("KROGER_BROWSER_CHANNEL") or None
+    if kroger_browser_channel:
+        kroger_browser_channel = kroger_browser_channel.strip() or None
 
     kroger_cookie_header = args.kroger_cookie or os.environ.get("KROGER_COOKIE") or None
     kroger_cookie_file = args.kroger_cookie_file or None
@@ -473,6 +512,10 @@ def main() -> int:
         kroger_circular_id=kroger_circular_id,
         kroger_cookie_header=kroger_cookie_header,
         kroger_extra_headers=kroger_extra_headers,
+        kroger_browser_profile_dir=kroger_browser_profile_dir,
+        kroger_browser_headless=kroger_browser_headless,
+        kroger_browser_post_load_wait_ms=args.kroger_browser_post_load_wait_ms,
+        kroger_browser_channel=kroger_browser_channel,
         ad_fetch_wrapper=ad_fetch_wrapper,
         ad_fetch_json_wrapper=ad_fetch_json_wrapper,
     )
@@ -500,6 +543,11 @@ def main() -> int:
     progress(f"Ad capture mode: {args.ad_mode}")
     if args.ad_mode in ("web", "playwright") and kroger_circular_id:
         progress(f"Kroger Atlas circular id (CLI/env): {kroger_circular_id}")
+    if args.ad_mode == "playwright" and kroger_browser_profile_dir:
+        progress(f"Kroger browser profile dir: {kroger_browser_profile_dir}")
+        progress(f"Kroger browser headed: {args.kroger_headed}")
+        if kroger_browser_channel:
+            progress(f"Kroger browser channel: {kroger_browser_channel}")
     if args.simulate_ad_failure:
         progress("Ad capture mode: simulated failure")
 
@@ -543,6 +591,8 @@ def main() -> int:
     progress(f"Ad source: {result.ad_context.source}")
     progress(f"Used manual fallback: {result.used_manual_fallback}")
     progress(f"Selected meals: {len(result.meals)}")
+    if result.ad_context.message:
+        progress(f"Ad capture message: {result.ad_context.message}")
     if result.diagnostics and result.diagnostics.insufficient_reason:
         progress(f"Selection warning: {result.diagnostics.insufficient_reason}")
 
@@ -629,6 +679,9 @@ def main() -> int:
         )
 
         quality_errors: list[str] = []
+        if not result.ad_context.success:
+            capture_message = result.ad_context.message or "unknown"
+            quality_errors.append(f"quality_gate_failed:capture_failed:{capture_message}")
         if selected_meals < min_meals:
             quality_errors.append(
                 f"quality_gate_failed:selected_meals({selected_meals})<required({min_meals})"

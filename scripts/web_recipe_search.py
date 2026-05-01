@@ -13,7 +13,7 @@ from urllib.parse import quote_plus, urlparse
 from urllib.request import Request, urlopen
 
 from scripts.ad_capture import SaleItem
-from scripts.recipe_search import RecipeDocument, RecipeSearchAdapter
+from scripts.recipe_search import RecipeDocument, RecipeSearchAdapter, sale_item_recipe_anchors
 
 
 FetchText = Callable[[str], str]
@@ -160,6 +160,19 @@ def _infer_protein(ingredients: tuple[str, ...], title: str) -> str:
         if token in joined:
             return token
     return "unknown"
+
+
+def _query_anchor_for_sale_anchor(anchor: str) -> str:
+    normalized = anchor.strip().lower()
+    replacements = {
+        "chicken breasts": "chicken breast",
+        "chicken wings": "chicken wings",
+        "beef patties": "ground beef",
+        "beef patty": "ground beef",
+        "pork butt": "pork shoulder",
+        "ribs": "ribs",
+    }
+    return replacements.get(normalized, normalized)
 
 
 def _parse_recipe_json_ld(payload: object, url: str) -> RecipeDocument | None:
@@ -366,6 +379,7 @@ def _parse_recipe_heuristic(html_text: str, url: str) -> RecipeDocument | None:
 class WebSearchConfig:
     max_links: int = 20
     random_domain_count: int = 7
+    max_query_anchors: int = 5
     use_relaxed_query_fallback: bool = True
     trusted_domains: tuple[str, ...] = (
         "allrecipes.com",
@@ -432,17 +446,12 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         }
 
     def _pick_query_anchors(self, sale_items: tuple[SaleItem, ...], *, max_anchors: int) -> list[str]:
-        # Bing often returns better "recipe" results when anchored on common proteins.
-        # Since our ad parser may sometimes only extract coarse anchors (e.g. Produce/Dairy),
-        # we bias toward these protein tokens for live web search.
-        protein_tokens = ("chicken", "beef", "pork", "turkey", "lamb")
-
         picked: list[str] = []
         for item in sale_items:
-            name = (item.name or "").lower()
-            for token in protein_tokens:
-                if token in name and token not in picked:
-                    picked.append(token)
+            for anchor in sale_item_recipe_anchors(item.name):
+                query_anchor = _query_anchor_for_sale_anchor(anchor)
+                if query_anchor not in picked:
+                    picked.append(query_anchor)
             if len(picked) >= max_anchors:
                 break
 
@@ -450,13 +459,16 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
             return picked[:max_anchors]
 
         # Fallback: use a deterministic protein set to keep search on track.
-        return list(protein_tokens)[:max_anchors]
+        return ["chicken breast", "ground beef", "shrimp", "tuna", "sausage"][:max_anchors]
 
     def _build_query_for_domain(self, sale_items: tuple[SaleItem, ...], domain: str) -> str:
         anchors = self._pick_query_anchors(sale_items, max_anchors=1)
         anchor_text = anchors[0] if anchors else "chicken"
         # Keep query syntax simple so Bing RSS reliably returns results from the targeted domain.
         return f"site:{domain} {anchor_text} recipe"
+
+    def _build_query_for_anchor_and_domain(self, anchor: str, domain: str) -> str:
+        return f"site:{domain} {anchor} recipe"
 
     def _build_relaxed_query_for_domain(self, sale_items: tuple[SaleItem, ...], domain: str) -> str:
         anchors = self._pick_query_anchors(sale_items, max_anchors=1)
@@ -486,7 +498,19 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
     def _search_links(self, query: str, *, max_links: int, domain_filter: str | None = None) -> list[str]:
         self.last_stats["rss_queries"] = int(self.last_stats["rss_queries"]) + 1
         url = f"https://www.bing.com/search?format=rss&q={quote_plus(query)}"
-        xml = self._fetch_text(url)
+        try:
+            xml = self._fetch_text(url)
+        except HTTPError as error:
+            self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
+            if int(error.code) == 403:
+                self.last_stats["pages_failed_403"] = int(self.last_stats["pages_failed_403"]) + 1
+            return []
+        except (TimeoutError, URLError):
+            self.last_stats["pages_failed_timeout"] = int(self.last_stats["pages_failed_timeout"]) + 1
+            return []
+        except Exception:
+            self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
+            return []
         links = _extract_rss_links(xml)
         self.last_stats["raw_links"] = int(self.last_stats["raw_links"]) + len(links)
         gated = [link for link in links if self._is_allowed_link(link, domain_filter=domain_filter)]
@@ -580,36 +604,54 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         }
 
         links: list[str] = []
+        query_anchors = self._pick_query_anchors(
+            sale_items,
+            max_anchors=max(1, int(self._config.max_query_anchors)),
+        )
 
         # Strict per-domain pass
         for domain in selected_domains:
-            remaining = self._config.max_links - len(links)
-            if remaining <= 0:
+            for anchor in query_anchors:
+                remaining = self._config.max_links - len(links)
+                if remaining <= 0:
+                    break
+                query = self._build_query_for_anchor_and_domain(anchor, domain)
+                links.extend(self._search_links(query, max_links=remaining, domain_filter=domain))
+            if len(links) >= self._config.max_links:
                 break
-            query = self._build_query_for_domain(sale_items, domain)
-            links.extend(self._search_links(query, max_links=remaining, domain_filter=domain))
 
         # Relaxed fallback if strict pass produced nothing
         if not links and self._config.use_relaxed_query_fallback:
             self.last_stats["used_relaxed_query"] = True
             for domain in selected_domains:
-                remaining = self._config.max_links - len(links)
-                if remaining <= 0:
+                for anchor in query_anchors:
+                    remaining = self._config.max_links - len(links)
+                    if remaining <= 0:
+                        break
+                    relaxed_query = self._build_query_for_anchor_and_domain(anchor, domain)
+                    links.extend(
+                        self._search_links(relaxed_query, max_links=remaining, domain_filter=domain)
+                    )
+                if len(links) >= self._config.max_links:
                     break
-                relaxed_query = self._build_relaxed_query_for_domain(sale_items, domain)
-                links.extend(self._search_links(relaxed_query, max_links=remaining, domain_filter=domain))
 
         # Final permissive pass: if Bing results do not include any allowed links, try parsing
         # JSON-LD from whatever pages are returned. JSON-LD parsing still enforces Recipe + rating.
         if not links:
-            anchors = [item.name for item in sale_items[:2]]
-            anchor_text = " ".join(anchors) if anchors else "easy dinner"
+            anchor_text = " ".join(query_anchors[:3]) if query_anchors else "easy dinner"
             # Permissive query without strict site constraint; still expects Recipe JSON-LD on destination pages.
             permissive_query = f"{anchor_text} easy recipe"
             self.last_stats["rss_queries"] = int(self.last_stats["rss_queries"]) + 1
             url = f"https://www.bing.com/search?format=rss&q={quote_plus(permissive_query)}"
-            xml = self._fetch_text(url)
-            raw_links = _extract_rss_links(xml)
+            try:
+                xml = self._fetch_text(url)
+            except (HTTPError, TimeoutError, URLError):
+                xml = ""
+                self.last_stats["pages_failed_timeout"] = int(self.last_stats["pages_failed_timeout"]) + 1
+            except Exception:
+                xml = ""
+                self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
+            raw_links = _extract_rss_links(xml) if xml else []
             self.last_stats["raw_links"] = int(self.last_stats["raw_links"]) + len(raw_links)
             # Still gate to trusted domains/paths to reduce noise and avoid fetching pages
             # that never contain Recipe JSON-LD.

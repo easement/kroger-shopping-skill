@@ -303,10 +303,18 @@ class KrogerPlaywrightCaptureTests(unittest.TestCase):
             weeklyad_url: str,
             circular_id: str | None,
             headers: dict[str, str],
+            user_data_dir: str | None,
+            headless: bool,
+            post_load_wait_ms: int,
+            browser_channel: str | None,
         ) -> dict[str, object]:
             self.assertIn("kroger.com/weeklyad", weeklyad_url)
             self.assertEqual(circular_id, "63b9590c-dbd9-44a3-b0cc-abb35d99690e")
             self.assertIn("User-Agent", headers)
+            self.assertIsNone(user_data_dir)
+            self.assertTrue(headless)
+            self.assertEqual(post_load_wait_ms, 5000)
+            self.assertIsNone(browser_channel)
             return payload
 
         adapter = KrogerPlaywrightAdCaptureAdapter(
@@ -327,6 +335,10 @@ class KrogerPlaywrightCaptureTests(unittest.TestCase):
             weeklyad_url: str,
             circular_id: str | None,
             headers: dict[str, str],
+            user_data_dir: str | None,
+            headless: bool,
+            post_load_wait_ms: int,
+            browser_channel: str | None,
         ) -> dict[str, object]:
             raise RuntimeError("playwright unavailable")
 
@@ -335,6 +347,151 @@ class KrogerPlaywrightCaptureTests(unittest.TestCase):
         self.assertFalse(result.success)
         self.assertEqual(result.source, "kroger-playwright")
         self.assertIn("request_failed:playwright unavailable", result.message)
+
+    def test_playwright_adapter_passes_browser_session_options(self) -> None:
+        def fake_playwright_capture(
+            weeklyad_url: str,
+            circular_id: str | None,
+            headers: dict[str, str],
+            user_data_dir: str | None,
+            headless: bool,
+            post_load_wait_ms: int,
+            browser_channel: str | None,
+        ) -> dict[str, object]:
+            self.assertEqual(user_data_dir, "/tmp/kroger-profile")
+            self.assertFalse(headless)
+            self.assertEqual(post_load_wait_ms, 9000)
+            self.assertEqual(browser_channel, "chrome")
+            return {
+                "html": "<html><body>weeklyad</body></html>",
+                "circular_id": "63b9590c-dbd9-44a3-b0cc-abb35d99690e",
+                "deals_status": 200,
+                "deals_body": json.dumps(
+                    {
+                        "data": {
+                            "shoppableWeeklyDeals": {
+                                "ads": [
+                                    {
+                                        "mainlineCopy": "Fresh Salmon",
+                                        "underlineCopy": "Whole Fillet",
+                                        "retailPrice": 8.99,
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ),
+                "deals_error": "",
+            }
+
+        adapter = KrogerPlaywrightAdCaptureAdapter(
+            config=KrogerWebCaptureConfig(
+                circular_id="63b9590c-dbd9-44a3-b0cc-abb35d99690e",
+                browser_profile_dir="/tmp/kroger-profile",
+                browser_headless=False,
+                browser_post_load_wait_ms=9000,
+                browser_channel="chrome",
+            ),
+            playwright_capture=fake_playwright_capture,
+        )
+
+        result = adapter.capture_weekly_ad("01100459")
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.sale_items[0].name, "Fresh Salmon - Whole Fillet")
+
+    def test_playwright_adapter_parses_digital_ad_page_payloads(self) -> None:
+        def fake_playwright_capture(
+            weeklyad_url: str,
+            circular_id: str | None,
+            headers: dict[str, str],
+            user_data_dir: str | None,
+            headless: bool,
+            post_load_wait_ms: int,
+            browser_channel: str | None,
+        ) -> dict[str, object]:
+            return {
+                "html": "<html><body>weeklyad</body></html>",
+                "circular_id": None,
+                "deals_status": None,
+                "deals_body": "",
+                "deals_error": "",
+                "digital_ad_bodies": [
+                    json.dumps(
+                        {
+                            "eventPageId": "page-1",
+                            "contents": [
+                                {
+                                    "contentType": "Offer",
+                                    "mapConfig": json.dumps(
+                                        {
+                                            "content": {
+                                                "headline": "Fresh 80% Lean Homestyle Beef Patties",
+                                                "bodyCopy": "8 ct, 1.9 lb",
+                                            }
+                                        }
+                                    ),
+                                }
+                            ],
+                        }
+                    )
+                ],
+            }
+
+        adapter = KrogerPlaywrightAdCaptureAdapter(playwright_capture=fake_playwright_capture)
+        result = adapter.capture_weekly_ad("01100459")
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.sale_items[0].name, "Fresh 80% Lean Homestyle Beef Patties - 8 ct, 1.9 lb")
+        self.assertEqual(result.sale_items[0].category, "digital-ad-offer")
+
+    def test_playwright_adapter_prefers_digital_ad_payloads_over_promo_html(self) -> None:
+        def fake_playwright_capture(
+            weeklyad_url: str,
+            circular_id: str | None,
+            headers: dict[str, str],
+            user_data_dir: str | None,
+            headless: bool,
+            post_load_wait_ms: int,
+            browser_channel: str | None,
+        ) -> dict[str, object]:
+            return {
+                "html": "<html><body>Save | $10 New oral GLP-1 medication now available</body></html>",
+                "circular_id": None,
+                "deals_status": None,
+                "deals_body": "",
+                "deals_error": "",
+                "digital_ad_bodies": [
+                    json.dumps(
+                        {
+                            "eventPageId": "page-1",
+                            "contents": [
+                                {
+                                    "contentType": "Offer",
+                                    "mapConfig": json.dumps(
+                                        {
+                                            "content": {
+                                                "headline": "Tyson Family Pack Frozen Chicken",
+                                                "bodyCopy": "Select Varieties, 40-64 oz",
+                                            }
+                                        }
+                                    ),
+                                }
+                            ],
+                        }
+                    )
+                ],
+            }
+
+        adapter = KrogerPlaywrightAdCaptureAdapter(playwright_capture=fake_playwright_capture)
+        result = adapter.capture_weekly_ad("01100459")
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            result.sale_items[0].name,
+            "Tyson Family Pack Frozen Chicken - Select Varieties, 40-64 oz",
+        )
+        self.assertEqual(adapter.last_stats["parsed_from_api_items"], 1)
 
 
 if __name__ == "__main__":

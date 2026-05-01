@@ -12,15 +12,16 @@ def make_doc(
     protein: str,
     rating: float = 4.4,
     vote_count: int = 180,
-    ingredients: tuple[str, ...] = ("chicken breast", "garlic", "tomato"),
+    ingredients: tuple[str, ...] | None = None,
     url_domain: str = "allrecipes.com",
 ) -> RecipeDocument:
+    doc_ingredients = ingredients or (protein, "garlic", "tomato")
     return RecipeDocument(
         title=f"Recipe {idx}",
         url=f"https://{url_domain}/r/{idx}",
         cuisine=cuisine,
         protein=protein,
-        ingredients=ingredients,
+        ingredients=doc_ingredients,
         rating=rating,
         vote_count=vote_count,
         prep_minutes=30,
@@ -37,6 +38,9 @@ class PipelineTests(unittest.TestCase):
             sale_items=(
                 SaleItem(name="chicken", price_text="$1.99/lb", category="protein"),
                 SaleItem(name="beef", price_text="$3.99/lb", category="protein"),
+                SaleItem(name="pork", price_text="$2.49/lb", category="protein"),
+                SaleItem(name="turkey", price_text="$4.99/lb", category="protein"),
+                SaleItem(name="lamb", price_text="$7.99/lb", category="protein"),
             ),
         )
         adapter = StaticAdCaptureAdapter(ad_result)
@@ -134,6 +138,55 @@ class PipelineTests(unittest.TestCase):
         )
         self.assertIsNotNone(result.diagnostics)
         self.assertEqual(result.diagnostics.insufficient_reason, "insufficient_eligible_candidates")
+
+    def test_pipeline_returns_empty_when_capture_has_no_sale_items(self) -> None:
+        ad_result = AdCaptureResult(
+            success=True,
+            location_id="01100459",
+            source="kroger-web",
+            sale_items=(),
+        )
+        adapter = StaticAdCaptureAdapter(ad_result)
+        docs = [make_doc(i, cuisine="Italian", protein="chicken") for i in range(1, 15)]
+
+        result = run_menu_pipeline(
+            ad_adapter=adapter,
+            recipe_docs=docs,
+            location_id="01100459",
+            target_count=10,
+        )
+
+        self.assertFalse(result.ad_context.success)
+        self.assertEqual(result.ad_context.message, "no_sale_items_captured")
+        self.assertEqual(len(result.meals), 0)
+
+    def test_pipeline_fails_closed_when_capture_only_has_non_recipe_promos(self) -> None:
+        ad_result = AdCaptureResult(
+            success=True,
+            location_id="01100459",
+            source="kroger-playwright",
+            sale_items=(
+                SaleItem(name="Save", price_text="$10", category="unknown"),
+                SaleItem(
+                    name="New oral GLP-1 medication now available",
+                    price_text="$149/month",
+                    category="unknown",
+                ),
+            ),
+        )
+        adapter = StaticAdCaptureAdapter(ad_result)
+        docs = [make_doc(i, cuisine="Italian", protein="chicken") for i in range(1, 15)]
+
+        result = run_menu_pipeline(
+            ad_adapter=adapter,
+            recipe_docs=docs,
+            location_id="01100459",
+            target_count=10,
+        )
+
+        self.assertFalse(result.ad_context.success)
+        self.assertEqual(result.ad_context.message, "no_recipe_relevant_sale_items_captured")
+        self.assertEqual(len(result.meals), 0)
 
 
 if __name__ == "__main__":

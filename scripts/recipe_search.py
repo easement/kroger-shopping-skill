@@ -3,11 +3,75 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
+import re
 from typing import Protocol
 from urllib.parse import urlparse
 
 from scripts.ad_capture import SaleItem
 from scripts.menu_planner import RecipeCandidate
+
+SALE_MATCH_ANCHORS = (
+    "chicken breast",
+    "chicken breasts",
+    "chicken wing",
+    "chicken wings",
+    "ground beef",
+    "beef patties",
+    "beef patty",
+    "pork butt",
+    "pork shoulder",
+    "pork tenderloin",
+    "pork chop",
+    "pork chops",
+    "ribs",
+    "shrimp",
+    "tuna",
+    "salmon",
+    "sausage",
+    "chorizo",
+    "ham",
+    "turkey",
+    "lamb",
+)
+
+BROAD_SALE_MATCH_ANCHORS = {
+    "beef",
+    "chicken",
+    "pork",
+}
+
+
+def _normalize_text(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+
+
+def _contains_phrase(haystack: str, phrase: str) -> bool:
+    pattern = rf"(?<![a-z0-9]){re.escape(phrase)}(?![a-z0-9])"
+    return re.search(pattern, haystack) is not None
+
+
+def sale_item_recipe_anchors(sale_item_name: str) -> tuple[str, ...]:
+    normalized = _normalize_text(sale_item_name)
+    normalized = normalized.replace("chicken of the sea", "")
+    anchors = [anchor for anchor in SALE_MATCH_ANCHORS if _contains_phrase(normalized, anchor)]
+    if _contains_phrase(normalized, "chicken") and _contains_phrase(normalized, "wings"):
+        anchors.append("chicken wings")
+    if _contains_phrase(normalized, "beef") and (
+        _contains_phrase(normalized, "patties") or _contains_phrase(normalized, "patty")
+    ):
+        anchors.extend(["beef patties", "ground beef"])
+    if _contains_phrase(normalized, "pork") and _contains_phrase(normalized, "butt"):
+        anchors.append("pork butt")
+    if _contains_phrase(normalized, "pork") and _contains_phrase(normalized, "shoulder"):
+        anchors.append("pork shoulder")
+
+    # Only use broad protein anchors when the ad did not identify a different cut.
+    for anchor in BROAD_SALE_MATCH_ANCHORS:
+        has_specific_anchor = any(item.startswith(anchor) for item in anchors)
+        if not has_specific_anchor and _contains_phrase(normalized, anchor):
+            anchors.append(anchor)
+
+    return tuple(dict.fromkeys(anchors))
 
 
 @dataclass(frozen=True)
@@ -38,8 +102,16 @@ def _extract_domain(url: str) -> str:
 
 
 def _sale_matches_for_doc(doc: RecipeDocument, sale_item_names: list[str]) -> tuple[str, ...]:
-    joined = " | ".join([doc.title.lower(), *[item.lower() for item in doc.ingredients]])
-    matches = [item for item in sale_item_names if item.lower() in joined]
+    joined = _normalize_text(" | ".join([doc.title, *doc.ingredients]))
+    matches: list[str] = []
+    for item in sale_item_names:
+        normalized_item = _normalize_text(item)
+        if normalized_item and normalized_item in joined:
+            matches.append(item)
+            continue
+        sale_anchor_matches = [anchor for anchor in sale_item_recipe_anchors(item) if _contains_phrase(joined, anchor)]
+        if sale_anchor_matches:
+            matches.append(item)
     return tuple(dict.fromkeys(matches))
 
 
