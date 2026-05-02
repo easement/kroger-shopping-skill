@@ -8,6 +8,8 @@ Generate a weekly set of 10 healthy/easy meals from Kroger sale context with div
 - Requires rated recipes (`>=4.0`) with vote-weighted scoring
 - Balances diversity across proteins, cuisines, and source domains
 - Supports fixture, web, and Playwright-backed recipe/ad modes
+- Fetches Kroger weekly ads through a DACS-first Playwright path that avoids relying on visible page rendering
+- Keeps curated quick-recipe coverage for recurring sale proteins like ground beef, shrimp, pork shoulder, ribs, sausage, and chicken wings
 - Produces JSON, plain meal lines, or markdown meal links
 
 ## Setup
@@ -28,21 +30,33 @@ python3 -m unittest discover -s tests -p "test_*.py"
 
 ## Weekly Workflow (Recommended)
 
-1) Export Kroger `shoppable-weekly-deals` JSON from browser DevTools to `fixtures/live-deals.json`
-
-2) Run weekly refresh + markdown output:
+Run live Kroger ad capture with the persistent browser profile and the current live recipe fixture:
 
 ```bash
-python3 -m scripts.refresh_live_deals_fixture && \
-python3 -m scripts.refresh_live_recipes_fixture --mode playwright --target-count 100 --allow-shortfall && \
 python3 -m scripts.run_weekly_plan \
-  --ad-mode fixture \
-  --ad-fixture fixtures/ad.live.from-deals.json \
+  --ad-mode playwright \
+  --kroger-browser-profile-dir .kroger-browser-profile \
+  --kroger-browser-channel chrome \
   --search-mode fixture \
   --recipe-fixture fixtures/recipes.live.json \
   --target-count 10 \
   --quality-gate \
   --output-format meal-markdown
+```
+
+Refresh recipe coverage when you want to rotate or expand the live recipe fixture:
+
+```bash
+python3 -m scripts.refresh_live_recipes_fixture \
+  --mode playwright \
+  --target-count 100 \
+  --allow-shortfall
+```
+
+Manual ad-fixture refresh is still available for replay/debugging if you export Kroger JSON to `fixtures/live-deals.json`:
+
+```bash
+python3 -m scripts.refresh_live_deals_fixture
 ```
 
 ## Core Commands
@@ -82,7 +96,6 @@ Browser-assisted Kroger capture from a persistent profile:
 python3 -m scripts.run_weekly_plan \
   --ad-mode playwright \
   --kroger-browser-profile-dir .kroger-browser-profile \
-  --kroger-headed \
   --kroger-browser-channel chrome \
   --search-mode fixture \
   --recipe-fixture fixtures/recipes.live.json \
@@ -116,3 +129,5 @@ zip -r ~/Desktop/grocery-weekly-menu-skill.zip . -x "node_modules/*" -x ".git/*"
 - Default location id is `01100459` (override with `--location-id`)
 - Keep `fixtures/kroger_extra_headers.live.json` local only; use `fixtures/kroger_extra_headers.template.json` as the safe starter
 - `--search-mode fixture` requires `--recipe-fixture`
+- `scripts.recipe_coverage` is intentionally checked in as stable coverage for recurring weekly-ad proteins that web search may under-fill
+- `.kroger-browser-profile/` stores local browser session state and is ignored by git
