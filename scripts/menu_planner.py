@@ -29,6 +29,9 @@ EXCLUDED_CUISINE_TOKENS = {
     "indian",
 }
 
+SERIOUS_EATS_DOMAIN = "seriouseats.com"
+SERIOUS_EATS_BASE_SCORE = 3.0
+
 TRUSTED_SOURCES = {
     "allrecipes.com",
     "foodnetwork.com",
@@ -121,17 +124,22 @@ def _is_excluded_cuisine(cuisine: str) -> bool:
     return any(token in normalized_cuisine for token in EXCLUDED_CUISINE_TOKENS)
 
 
+def _is_serious_eats(domain: str) -> bool:
+    return _normalize(domain) == SERIOUS_EATS_DOMAIN
+
+
 def _is_easy(prep_minutes: int, config: PlannerConfig) -> bool:
     return prep_minutes <= config.max_prep_minutes
 
 
 def check_eligibility(candidate: RecipeCandidate, config: PlannerConfig | None = None) -> EligibilityResult:
     active_config = config or PlannerConfig()
-    if candidate.rating < active_config.min_rating:
-        return EligibilityResult(eligible=False, reason="rating_below_threshold")
 
-    if candidate.vote_count <= 0:
-        return EligibilityResult(eligible=False, reason="missing_vote_count")
+    if not _is_serious_eats(candidate.source_domain):
+        if candidate.rating < active_config.min_rating:
+            return EligibilityResult(eligible=False, reason="rating_below_threshold")
+        if candidate.vote_count <= 0:
+            return EligibilityResult(eligible=False, reason="missing_vote_count")
 
     if not candidate.healthy:
         return EligibilityResult(eligible=False, reason="not_healthy")
@@ -156,8 +164,6 @@ def is_eligible(candidate: RecipeCandidate) -> bool:
 
 
 def score_candidate(candidate: RecipeCandidate) -> RankedRecipe:
-    normalized_rating = max(0.0, min(1.0, (candidate.rating - 4.0) / 1.0))
-    vote_weight = log10(candidate.vote_count + 1)
     sale_boost = min(len(candidate.sale_item_matches), 3) * 0.05
     ease_boost = max(0, 45 - candidate.prep_minutes) / 45 * 0.05
     trusted_source = _normalize(candidate.source_domain) in TRUSTED_SOURCES
@@ -165,7 +171,13 @@ def score_candidate(candidate: RecipeCandidate) -> RankedRecipe:
     confidence = max(0.0, min(1.0, float(candidate.extraction_confidence)))
     confidence_boost = confidence * 0.03
 
-    score = normalized_rating * vote_weight + sale_boost + ease_boost + trusted_boost + confidence_boost
+    if _is_serious_eats(candidate.source_domain):
+        score = SERIOUS_EATS_BASE_SCORE + sale_boost + ease_boost + trusted_boost + confidence_boost
+    else:
+        normalized_rating = max(0.0, min(1.0, (candidate.rating - 4.0) / 1.0))
+        vote_weight = log10(candidate.vote_count + 1)
+        score = normalized_rating * vote_weight + sale_boost + ease_boost + trusted_boost + confidence_boost
+
     return RankedRecipe(candidate=candidate, score=score, trusted_source=trusted_source)
 
 

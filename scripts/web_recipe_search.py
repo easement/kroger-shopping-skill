@@ -142,6 +142,10 @@ def _as_list(value: object) -> list[str]:
     return []
 
 
+def _is_seriouseats_url(url: str) -> bool:
+    return "seriouseats.com" in url.lower()
+
+
 def _infer_protein(ingredients: tuple[str, ...], title: str) -> str:
     joined = " | ".join([title.lower(), *[item.lower() for item in ingredients]])
     protein_tokens = (
@@ -195,14 +199,20 @@ def _parse_recipe_json_ld(payload: object, url: str) -> RecipeDocument | None:
         return None
 
     aggregate = payload.get("aggregateRating") or {}
+    is_se = _is_seriouseats_url(url)
     try:
         rating = float(aggregate.get("ratingValue"))
         vote_count = int(float(aggregate.get("ratingCount") or aggregate.get("reviewCount") or 0))
     except (TypeError, ValueError):
-        return None
+        if not is_se:
+            return None
+        rating = 4.5
+        vote_count = 1
 
     if vote_count <= 0:
-        return None
+        if not is_se:
+            return None
+        vote_count = 1
 
     cuisine_values = _as_list(payload.get("recipeCuisine"))
     cuisine = cuisine_values[0] if cuisine_values else "Unknown"
@@ -275,14 +285,20 @@ def _parse_recipe_microdata(html_text: str, url: str) -> RecipeDocument | None:
         if count_match:
             rating_count_raw = count_match.group(1).strip()
 
+    is_se = _is_seriouseats_url(url)
     try:
         rating = float(str(rating_raw or "").strip())
         vote_count = int(float(str(rating_count_raw or "").strip()))
     except (TypeError, ValueError):
-        return None
+        if not is_se:
+            return None
+        rating = 4.5
+        vote_count = 1
 
     if vote_count <= 0:
-        return None
+        if not is_se:
+            return None
+        vote_count = 1
 
     cuisine = _extract_meta_content(html_text, attr="itemprop", value="recipeCuisine") or "Unknown"
     total_time = _extract_meta_content(html_text, attr="itemprop", value="totalTime") or ""
@@ -329,16 +345,25 @@ def _parse_recipe_heuristic(html_text: str, url: str) -> RecipeDocument | None:
             vote_count_raw = match.group("value")
             break
 
+    is_se = _is_seriouseats_url(url)
     if not rating_raw or not vote_count_raw:
-        return None
-
-    try:
-        rating = float(str(rating_raw).replace(",", "").strip())
-        vote_count = int(float(str(vote_count_raw).replace(",", "").strip()))
-    except (TypeError, ValueError):
-        return None
-    if vote_count <= 0:
-        return None
+        if not is_se:
+            return None
+        rating = 4.5
+        vote_count = 1
+    else:
+        try:
+            rating = float(str(rating_raw).replace(",", "").strip())
+            vote_count = int(float(str(vote_count_raw).replace(",", "").strip()))
+        except (TypeError, ValueError):
+            if not is_se:
+                return None
+            rating = 4.5
+            vote_count = 1
+        if vote_count <= 0:
+            if not is_se:
+                return None
+            vote_count = 1
 
     ingredient_matches = re.findall(
         r"<(?:li|span|div)[^>]*(?:ingredient|recipe-ingredient|ingredients-item)[^>]*>(.*?)</(?:li|span|div)>",
