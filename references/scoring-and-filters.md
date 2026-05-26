@@ -24,6 +24,12 @@ If uncertain, prefer simpler and more balanced options.
 2. If coverage is insufficient, add additional sources with explicit rating and vote count.
 3. Never include entries without rating evidence.
 
+## Serious Eats special treatment
+Serious Eats (`seriouseats.com`) is treated as a highly preferred editorial source:
+- **Eligibility**: Skip the minimum rating and vote-count filters entirely. A Serious Eats recipe is eligible regardless of its rating or vote count (other filters such as cuisine exclusions, ingredient exclusions, and prep time still apply).
+- **Scoring**: Use a fixed base score of `3.0` (approximately the score of a very highly rated, high-volume recipe) instead of the standard `normalizedRating × voteWeight` formula. Sale, ease, trusted-source, and confidence boosts are still applied on top.
+- **Cap**: No more than 3 Serious Eats recipes may appear per weekly menu (enforced by the standard per-domain cap).
+
 ## Weighted ranking model
 Use a vote-aware score so high-volume ratings carry more confidence.
 

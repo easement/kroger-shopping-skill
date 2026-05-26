@@ -1,8 +1,10 @@
 import unittest
 
 from scripts.menu_planner import (
+    SERIOUS_EATS_BASE_SCORE,
     PlannerConfig,
     RecipeCandidate,
+    check_eligibility,
     plan_weekly_menu,
     plan_weekly_menu_with_diagnostics,
     score_candidate,
@@ -245,6 +247,75 @@ class MenuPlannerTests(unittest.TestCase):
         )
         non_fn_count = len([item for item in result if item.candidate.source_domain != "foodnetwork.com"])
         self.assertGreaterEqual(non_fn_count, 4)
+
+
+class SeriousEatsTests(unittest.TestCase):
+    def _make_se_candidate(self, idx: int, **kwargs: object) -> RecipeCandidate:
+        kwargs.setdefault("cuisine", "American")
+        kwargs.setdefault("protein", "chicken")
+        return make_candidate(idx=idx, source_domain="seriouseats.com", **kwargs)
+
+    def test_serious_eats_eligible_with_zero_votes(self) -> None:
+        candidate = self._make_se_candidate(idx=300, vote_count=0)
+        result = check_eligibility(candidate)
+        self.assertTrue(result.eligible)
+
+    def test_serious_eats_eligible_with_low_rating(self) -> None:
+        candidate = self._make_se_candidate(idx=301, rating=3.0, vote_count=0)
+        result = check_eligibility(candidate)
+        self.assertTrue(result.eligible)
+
+    def test_serious_eats_score_uses_fixed_base(self) -> None:
+        se_candidate = self._make_se_candidate(idx=302, rating=3.0, vote_count=0)
+        ranked = score_candidate(se_candidate)
+        self.assertGreaterEqual(ranked.score, SERIOUS_EATS_BASE_SCORE)
+
+    def test_serious_eats_outscores_typical_recipe(self) -> None:
+        se_candidate = self._make_se_candidate(idx=303, rating=3.0, vote_count=0)
+        typical = make_candidate(
+            idx=304,
+            cuisine="Italian",
+            protein="beef",
+            source_domain="allrecipes.com",
+            rating=4.7,
+            vote_count=2000,
+        )
+        se_score = score_candidate(se_candidate).score
+        typical_score = score_candidate(typical).score
+        self.assertGreater(se_score, typical_score)
+
+    def test_serious_eats_capped_at_three_per_week(self) -> None:
+        proteins = ("chicken", "beef", "pork", "turkey", "salmon")
+        cuisines = ("American", "Italian", "Mexican", "Greek", "Mediterranean")
+        other_domains = ("allrecipes.com", "epicurious.com", "simplyrecipes.com", "budgetbytes.com", "skinnytaste.com")
+        se_candidates = [
+            self._make_se_candidate(
+                idx=i,
+                protein=proteins[i % len(proteins)],
+                vote_count=0,
+                rating=3.5,
+            )
+            for i in range(310, 316)
+        ]
+        # Spread other candidates across multiple domains so domain cap doesn't force SE overflow
+        other = [
+            make_candidate(
+                idx=320 + i,
+                cuisine=cuisines[i % len(cuisines)],
+                protein=proteins[i % len(proteins)],
+                source_domain=other_domains[i % len(other_domains)],
+                vote_count=200 + i,
+            )
+            for i in range(15)
+        ]
+        config = PlannerConfig(max_per_source_domain=3, max_per_protein=5)
+        result, _ = plan_weekly_menu_with_diagnostics(
+            se_candidates + other,
+            target_count=10,
+            config=config,
+        )
+        se_count = sum(1 for item in result if item.candidate.source_domain == "seriouseats.com")
+        self.assertLessEqual(se_count, 3)
 
 
 if __name__ == "__main__":
