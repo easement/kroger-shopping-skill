@@ -371,5 +371,46 @@ class WebRecipeSearchTests(unittest.TestCase):
         self.assertEqual(docs[0].extraction_method, "heuristic")
 
 
+    def test_healthy_domains_always_included_in_selected_domains(self) -> None:
+        healthy = ("eatingwell.com", "skinnytaste.com")
+        non_healthy = tuple(f"site{i}.com" for i in range(20))
+        config = WebSearchConfig(
+            trusted_domains=healthy + non_healthy,
+            healthy_domains=healthy,
+            random_domain_count=3,
+            brave_api_key=None,
+        )
+        fetched_queries: list[str] = []
+
+        def fake_fetch(url: str) -> str:
+            fetched_queries.append(url)
+            return "<rss><channel></channel></rss>"
+
+        adapter = WebRecipeSearchAdapter(config=config, fetch_text=fake_fetch)
+        adapter.search((SaleItem(name="chicken breast", price_text="$3.99", category="protein"),))
+        selected = adapter.last_stats["selected_domains"]
+        for domain in healthy:
+            self.assertIn(domain, selected)
+
+    def test_healthy_domains_use_healthy_prefixed_queries(self) -> None:
+        healthy_domain = "eatingwell.com"
+        config = WebSearchConfig(
+            trusted_domains=(healthy_domain,),
+            healthy_domains=(healthy_domain,),
+            random_domain_count=5,
+            brave_api_key=None,
+        )
+        fetched_queries: list[str] = []
+
+        def fake_fetch(url: str) -> str:
+            fetched_queries.append(url)
+            return "<rss><channel></channel></rss>"
+
+        adapter = WebRecipeSearchAdapter(config=config, fetch_text=fake_fetch)
+        adapter.search((SaleItem(name="chicken breast", price_text="$3.99", category="protein"),))
+        healthy_queries = [q for q in fetched_queries if "eatingwell.com" in q]
+        self.assertTrue(any("healthy" in q for q in healthy_queries))
+
+
 if __name__ == "__main__":
     unittest.main()

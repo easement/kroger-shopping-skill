@@ -3,6 +3,12 @@ from __future__ import annotations
 import argparse
 import os
 from collections import Counter
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -100,6 +106,15 @@ def _format_meal_plain_lines(result: object) -> str:
         main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
         lines.append(f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}")
         lines.append(item.candidate.url)
+    healthy_meals = list(getattr(result, "healthy_meals", ()) or ())
+    if healthy_meals:
+        lines.append("")
+        lines.append("--- Healthy Options ---")
+        for item in healthy_meals:
+            site = _pretty_site_name(item.candidate.url)
+            main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
+            lines.append(f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}")
+            lines.append(item.candidate.url)
     return "\n".join(lines)
 
 
@@ -111,6 +126,15 @@ def _format_meal_markdown_lines(result: object) -> str:
         main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
         label = f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}"
         lines.append(f"- [{label}]({item.candidate.url})")
+    healthy_meals = list(getattr(result, "healthy_meals", ()) or ())
+    if healthy_meals:
+        lines.append("")
+        lines.append("### Healthy Options")
+        for item in healthy_meals:
+            site = _pretty_site_name(item.candidate.url)
+            main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
+            label = f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}"
+            lines.append(f"- [{label}]({item.candidate.url})")
     return "\n".join(lines)
 
 
@@ -674,6 +698,20 @@ def main() -> int:
                 "sale_item_matches": list(item.candidate.sale_item_matches),
             }
             for item in result.meals
+        ],
+        "healthy_meal_count": len(result.healthy_meals),
+        "healthy_meals": [
+            {
+                "title": item.candidate.title,
+                "url": item.candidate.url,
+                "rating": item.candidate.rating,
+                "vote_count": item.candidate.vote_count,
+                "score": round(item.score, 4),
+                "source_domain": item.candidate.source_domain,
+                "protein": item.candidate.protein,
+                "sale_item_matches": list(item.candidate.sale_item_matches),
+            }
+            for item in result.healthy_meals
         ],
     }
     _validate_output_schema(output)
