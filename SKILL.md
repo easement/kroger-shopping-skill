@@ -78,4 +78,4 @@ For each of the 10 meals, include:
 ## Weekly Refresh + Markdown Output
 When user asks to refresh this week’s plan, run:
 `python3 -m scripts.refresh_live_deals_fixture && python3 -m scripts.refresh_live_recipes_fixture --mode playwright --target-count 100 --allow-shortfall && python3 -m scripts.run_weekly_plan --ad-mode fixture --ad-fixture fixtures/ad.live.from-deals.json --search-mode fixture --recipe-fixture fixtures/recipes.live.json --target-count 10 --quality-gate --output-format meal-markdown`
-Then return the markdown meal list output.
+Then present the meal list output as rendered Markdown — **do not wrap it in a code block**. Each recipe must appear as a rendered clickable hyperlink (e.g. `[Title](url)` renders as a blue link, not raw text). The Healthy Options section header and bullet links should also render.

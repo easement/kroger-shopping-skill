@@ -25,6 +25,9 @@ echo "[setup] python: $(python3 --version)"
 echo "[setup] node: $(node --version)"
 echo "[setup] npm: $(npm --version)"
 
+echo "[setup] installing python dependencies"
+pip3 install python-dotenv --break-system-packages 2>/dev/null || pip3 install python-dotenv
+
 echo "[setup] installing node dependencies"
 npm install
 
