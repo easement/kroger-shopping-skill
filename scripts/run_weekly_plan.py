@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import html
 import os
 from collections import Counter
 
@@ -98,23 +99,29 @@ def _meal_prefix_and_price(result: object, item: object, sale_price_lookup: dict
     return "Unknown", "N/A"
 
 
+def _clean_title(title: str) -> str:
+    return html.unescape(title)
+
+
 def _format_meal_plain_lines(result: object) -> str:
     sale_price_lookup = _build_sale_price_lookup(result)
     lines: list[str] = []
     for item in _group_meals_by_protein(result):
         site = _pretty_site_name(item.candidate.url)
         main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
-        lines.append(f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}")
-        lines.append(item.candidate.url)
+        title = _clean_title(item.candidate.title)
+        label = f"{main} - {title}({site} - {item.candidate.rating:.1f}) - {price}"
+        lines.append(f"- [{label}]({item.candidate.url})")
     healthy_meals = list(getattr(result, "healthy_meals", ()) or ())
     if healthy_meals:
         lines.append("")
-        lines.append("--- Healthy Options ---")
+        lines.append("### Healthy Options")
         for item in healthy_meals:
             site = _pretty_site_name(item.candidate.url)
             main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
-            lines.append(f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}")
-            lines.append(item.candidate.url)
+            title = _clean_title(item.candidate.title)
+            label = f"{main} - {title}({site} - {item.candidate.rating:.1f}) - {price}"
+            lines.append(f"- [{label}]({item.candidate.url})")
     return "\n".join(lines)
 
 
@@ -124,7 +131,8 @@ def _format_meal_markdown_lines(result: object) -> str:
     for item in _group_meals_by_protein(result):
         site = _pretty_site_name(item.candidate.url)
         main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
-        label = f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}"
+        title = _clean_title(item.candidate.title)
+        label = f"{main} - {title}({site} - {item.candidate.rating:.1f}) - {price}"
         lines.append(f"- [{label}]({item.candidate.url})")
     healthy_meals = list(getattr(result, "healthy_meals", ()) or ())
     if healthy_meals:
@@ -133,7 +141,8 @@ def _format_meal_markdown_lines(result: object) -> str:
         for item in healthy_meals:
             site = _pretty_site_name(item.candidate.url)
             main, price = _meal_prefix_and_price(result, item, sale_price_lookup)
-            label = f"{main} - {item.candidate.title}({site} - {item.candidate.rating:.1f}) - {price}"
+            title = _clean_title(item.candidate.title)
+            label = f"{main} - {title}({site} - {item.candidate.rating:.1f}) - {price}"
             lines.append(f"- [{label}]({item.candidate.url})")
     return "\n".join(lines)
 

@@ -1,672 +1,742 @@
 [
   {
-    "name": "Boneless Chuck Roast - USDA CHOICE",
-    "price_text": "$6.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Hickory Smoked Spiral Ham - Honey Glaze, Bone-In, Limit 2",
-    "price_text": "$1.95",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Cook's Ham Portion - Bone-In, Limit 2",
-    "price_text": "$1.75",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Fresh Atlantic Salmon Whole Fillets - Farm-Raised or Kroger Extra Large Cooked Shrimp, 26-30 ct, 2 lb Bag",
-    "price_text": "$8.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Red, Green or Black Seedless Grapes",
-    "price_text": "$1.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Taylor Farms Salad Kits - Select Varieties, 7.3-13.5 oz",
-    "price_text": "$2.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Lay's Potato Chips - 5-8 oz or Doritos, 9-10.75 oz or Cheetos, 6.5-9 oz; Select Varieties",
-    "price_text": "$10.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Pasta - 12-16 oz or Knorr Sides, 4-5.7 oz; Select Varieties",
-    "price_text": "$0.88",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Steamer Vegetables - 12 oz or Green Giant Steamer Vegetables, 7-8 oz; Select Varieties",
-    "price_text": "$0.88",
-    "category": "shoppable-weekly-deals"
+    "name": "DiGiorno Pizza - 14.14-30.3 oz or Hot Pockets, 4 ct; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
     "name": "Blue Bell Ice Cream - Select Varieties, 64 fl oz",
-    "price_text": "$6.99",
-    "category": "shoppable-weekly-deals"
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Jimmy Dean Breakfast Sandwiches - Select Varieties, 8 ct or 20 ct",
-    "price_text": "$9.99",
-    "category": "shoppable-weekly-deals"
+    "name": "California Red Cherries",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Clos Du Bois or Mark West - Select Varieties, 750 ml",
-    "price_text": "$8.97",
-    "category": "shoppable-weekly-deals"
+    "name": "Kroger Cheese - Select Varieties, 6-8 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Bloom Haus Boston Fern - 10\" Hanging Basket",
-    "price_text": "$12.00",
-    "category": "shoppable-weekly-deals"
+    "name": "Whole Boneless Beef Brisket - USDA CHOICE Limit 2",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Kroger Eggs - Large, Grade A, 18 ct",
-    "price_text": "$1.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Asparagus - or Organic Asparagus, $3.99 lb with Card",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Land O Lakes Butter - 16 oz or Smartway Sugar, 4 lb; Select Varieties",
-    "price_text": "$2.49",
-    "category": "shoppable-weekly-deals"
+    "name": "Sweet Baby Ray's BBQ Sauce - 18 oz or Kinder's Sauce, 15.3-15.8 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Jimmy Dean Bacon or Breakfast Sausage - Select Varieties, 12-16 oz",
-    "price_text": "$2.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Nabisco Ritz or Snack Crackers - Select Varieties, 3-13.7 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Nabisco Snack Crackers - Select Varieties, 3.5-8.5 oz",
-    "price_text": "$2.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Gatorade - 8-Pack, 20 fl oz or Pure Leaf Tea, 6-Pack, 16.9-18.5 fl oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Coffee-mate Creamer - 64 fl oz or Happy Egg Co Eggs, Large, Grade A, 18 ct; Select Varieties",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Pork Boston Butt or St. Louis Style Pork Ribs - Bone-In",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Nature Valley Bars - 5-12 ct or Betty Crocker Fruit Snacks, 6-10 ct; Select Varieties",
-    "price_text": "$1.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Bud, Miller or Coors - Select Varieties, 30-Pack, 12 fl oz Cans",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Pepperidge Farm Goldfish Crackers - 4.8-8 oz or Crystal Light Drink Mix, 10 ct; Select Varieties",
-    "price_text": "$1.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Georgia Blueberries - 18 oz Package",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Progresso Soup - 18-19 oz or Barilla Pasta, 9-16 oz; Select Varieties",
-    "price_text": "$1.79",
-    "category": "shoppable-weekly-deals"
+    "name": "Johnsonville Smoked or Dinner Sausage - Select Varieties, 12-19 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Pillsbury Grands Biscuits, Crescents or Cinnamon Rolls - Select Varieties, 8 ct",
-    "price_text": "$1.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Private Selection Buns - Select Varieties, 8 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Rao's Pasta Sauce - 24 oz or Bertolli Frozen Entr\u00e9e, 22 oz; Select Varieties",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Whole Seedless Watermelon - Limit 5",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Simple Truth Organic Lunch Meat - Select Varieties, 5-6 oz",
-    "price_text": "$4.49",
-    "category": "shoppable-weekly-deals"
+    "name": "Bush's Best Baked or Grillin' Beans - Select Varieties, 21.7-28 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Ken's Salad Dressing - 16 fl oz or Sara Lee Bread, 20 oz; Select Varieties",
-    "price_text": "$2.49",
-    "category": "shoppable-weekly-deals"
+    "name": "Doritos - 9-10.75 oz or Tostitos, 9.5-14.43 oz or Sunchips, 7 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Charmin Bath Tissue - Select Varieties, 6 Mega XL Rolls",
-    "price_text": "$10.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Perdue Boneless Chicken Sale - Select Varieties, No Antibiotics Ever",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Kroger Family Size Appetizers - 16-33 oz or Quest Crispy Protein Bars, 4 ct; Select Varieties",
-    "price_text": "$8.49",
-    "category": "shoppable-weekly-deals"
+    "name": "Smithfield Bacon - Select Varieties, 12-16 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "The Greek Gods Greek Yogurt - 24 oz or Bear Naked Granola, 11-12 oz; Select Varieties",
-    "price_text": "$3.79",
-    "category": "shoppable-weekly-deals"
+    "name": "Coca-Cola, Pepsi or Canada Dry - Select Varieties, 12-Pack, 12 fl oz Cans, Limit 10 Packages",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Tidy Cats Litter - Select Varieties, 20 lb",
-    "price_text": "$11.99",
-    "category": "shoppable-weekly-deals"
+    "name": "White Claw, Twisted Tea or Topo Chico - Select Varieties, 12-Pack, 12 fl oz Cans",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Dixie Paper Plates or Bowls - Select Varieties, 25-90 ct",
-    "price_text": "$5.49",
-    "category": "shoppable-weekly-deals"
+    "name": "Powerade - 28 fl oz or Sparkling Ice, 17 fl oz or Body Armor, 16 fl oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "White Claw, Twisted Tea or Cayman Jack - Select Varieties, 12-Pack, 12 fl oz Cans",
-    "price_text": "$15.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Kroger Frozen Dairy Dessert Sandwiches - Select Varieties, 6-16 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Kroger Granny Smith Apples - 3 lb Bag",
-    "price_text": "$3.99",
-    "category": "shoppable-weekly-deals"
+    "name": "General Mills Giant Size Cereal - Select Varieties, 20-29 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "King Arthur Flour - Select Varieties, 5 lb",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Charmin Bath Tissue - Select Varieties, 12 Mega XL Rolls",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Kroger Butter - 2-Pack, 16 oz or Lily's Baking Chips, 9 oz; Select Varieties",
-    "price_text": "$6.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Outshine Fruit Bars - 6 ct or LaCroix Sparkling Water, 8-Pack, 12 fl oz Cans; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Athletic Non Alcoholic - 6-Pack, 12 fl oz Cans or Michelob Ultra Zero or Heineken 0.00, 6-Pack, 12 fl oz Bottles; Select Varieties",
-    "price_text": "$9.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Oscar Mayer Meat Wieners - Select Varieties, 16 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Ocean Spray Cranberry Juice - 64 fl oz or GT's Kombucha, 16 fl oz; Select Varieties",
-    "price_text": "$6.00",
-    "category": "shoppable-weekly-deals"
+    "name": "Sabra Hummus - 8 oz or Stacy's Pita Chips, Thins or Bagel Chips, 6.75-7.33 oz; Select Varieties, In the Deli",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Kettle Brand Potato Chips - 6-7.5 oz or David Protein Bar, 2.2 oz; Select Varieties",
-    "price_text": "$6.00",
-    "category": "shoppable-weekly-deals"
+    "name": "40-Pack Kroger Purified Drinking Water - 16.9 fl oz or Alkaline Water, 24-Pack, 16.9 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Sweet Corn or Baker Russet Potatoes - 4 ct Tray",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kerrygold Butter - Select Varieties, 8 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Bounty Paper Towels - 8 Triple Rolls",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Pampers Swaddlers Diapers - Select Varieties, 38-96 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Tide Laundry Detergent - 27-34 fl oz or Gain Laundry Detergent, 39-46 fl oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Bath Tissue - 12 Double Rolls or Flushable Wipes, 5-Pack; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kingsford Charcoal - Select Varieties, 12-16 lb",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kleenex Facial Tissue - Select Varieties, 6 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Lay's Potato Chips - 5-8 oz or Lays Kettle Cooked Potato Chips, 6-8 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Tide Laundry Detergent - Select Varieties, 117-132 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Dove Deodorant - Select Varieties, 3.8-4 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Garnier Nutrisse Hair Color - 1 ct or Garnier Fructis Shampoo or Conditioner, 33.8 fl oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Trolli Candy - Select Varieties, 6.3-7.2 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Ice Cream - Select Varieties, 48 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kraft Salad Dressing - Select Varieties, 14-16 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Ultra Paper Towels - 6 Double Rolls",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Home Chef St. Louis Style Ribs - Fully Cooked, 2 lb, In the Deli",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Private Selection Burger Patties - Select Varieties, 4 ct, 1.33 lb",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Oyster Bay or Ecco Domani - Select Varieties, 750 ml",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Paper Plates - 48 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Arizona Tea - 128 fl oz or Private Selection Cheese Slices, 7 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
     "name": "Sutter Home, Barefoot or Woodbridge - Select Varieties, 1.5 Liter",
-    "price_text": "$20.00",
-    "category": "shoppable-weekly-deals"
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Starkist Tuna Pouch - 2.6-3 oz or Chicken of the Sea Tuna, 5 oz; Select Varieties",
-    "price_text": "$10.00",
-    "category": "shoppable-weekly-deals"
+    "name": "Kettle Brand Potato Chips - 6-7.5 oz or Kroger Graham Crackers, 14.4 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "La Vieille Ferme or Andr\u00e9 - Select Varieties, 750 ml",
-    "price_text": "$7.19",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Jumbo Blueberries - 9.8 oz or Strawberries, 2 lb Package",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Boneless Pork Tenderloin - or Kroger Boneless Pork Chops 10 ct, 2 lb Pkg, $10",
-    "price_text": "$2.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Sumo Mandarins",
-    "price_text": "$5.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Fresh Fruit Tray with Dip - Select Varieties, 73.5 oz",
-    "price_text": "$22.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Bloom Haus Soft Reflection Bouquet",
-    "price_text": "$10.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Baby Vidalia Onions",
-    "price_text": "$1.29",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Red or Gold Potatoes - 5 lb Bag",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Ground Sausage or Meatballs - 16 oz or Wright Brand Smoked Sausage, 12 oz; Select Varieties",
-    "price_text": "$3.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Cocktail Shrimp with Sauce - Frozen, 11 oz",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Bob Evans Side Dish - 12-24 oz or Kroger Deli Thin Lunch Meat, 7-9 oz; Select Varieties",
-    "price_text": "$3.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Private Selection Oven Roasted Turkey Breast - or Colby Cheese, $7.99 lb with Card; Select Varieties, Sliced to Order or Grab & Go",
-    "price_text": "$12.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Potato Salad - or Macaroni Salad or Coleslaw, Select Varieties, 16 oz",
-    "price_text": "$3.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kenny's Key Lime Pie - Select Varieties, 24 oz",
-    "price_text": "$9.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Jumbo EZ Peel Shrimp - 21-25 ct, Raw, Sold in a 2 lb Bag for $13.98",
-    "price_text": "$6.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Raspberries or Blackberries - 6 oz Package",
-    "price_text": "$2.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Starbucks Coffee - 10-12 oz Bag or K-Cups, 10 ct; Select Varieties",
-    "price_text": "$8.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Powerade - 8-Pack, 20 fl oz or Body Armor, 8-Pack, 12 fl oz; Select Varieties",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Private Selection Sliced Cheese - Select Varieties, 8 oz, In the Deli",
-    "price_text": "$3.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Marie Callender's Pie - 25-42 oz or Dolly Parton's Cheesecake, 24 oz; Select Varieties",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "General Mills Large Size Cereal - Select Varieties, 12-18.2 oz",
-    "price_text": "$2.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Ruffles - 7.25-10.25 oz or Frito-Lay Baked Snacks, 6.25-7.63 oz; Select Varieties",
-    "price_text": "$2.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "OGX Shampoo or Conditioner - Select Varieties, 13 fl oz",
-    "price_text": "$6.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Lubriderm Lotion - Select Varieties, 16 fl oz",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Toastmaster Breakfast Appliance - Select Varieties",
-    "price_text": "$14.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kellogg's Giant Size Cereal - 19.5-29.5 oz or Starbucks Iced Coffee, 48 fl oz; Select Varieties",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Blue Diamond Almonds - 16 oz or Kind Bars, 6-10 ct; Select Varieties",
-    "price_text": "$6.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Seattle's Best Coffee - 10-12 oz Bag or K-Cups, 10 ct; Select Varieties",
-    "price_text": "$6.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "P. F. Chang's Entr\u00e9e - 18-22 oz or Birds Eye Family Size Voila Entr\u00e9e, 42 oz; Select Varieties",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Cheez-It Family Size Crackers - 17-21 oz or Totino's Pizza Rolls, 50 ct; Select Varieties",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Private Selection Meat & Cheese Rolls - Select Varieties, 5-6 oz, In the Deli",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Tropicana Orange Juice - 46 fl oz or Lactaid Milk, 64 fl oz; Select Varieties",
-    "price_text": "$3.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Oscar Mayer Uploaded Lunchables - Select Varieties, 14.1-16.1 oz",
-    "price_text": "$3.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Smucker's Uncrustables - 10 ct or El Monterey Breakfast Burritos, 8 ct; Select Varieties",
-    "price_text": "$9.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Huggies Pull-Ups Diapers - Select Varieties, 14-23 ct",
-    "price_text": "$9.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Huggies Wipes - Select Varieties, 112-192 ct",
-    "price_text": "$6.29",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "M&M's Family Size Candy - Select Varieties, 15-18.08 oz",
-    "price_text": "$7.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Private Selection Spiral Ham - Bone-In",
-    "price_text": "$3.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Private Selection Honeycrisp Apple Pie - or Other Varieties, 9\", In the Bakery",
-    "price_text": "$9.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Broccoli or Vegetable Medley - or Other Varieties, 24-32 oz Bag",
-    "price_text": "$6.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Side Dish - Select Varieties, 20-24 oz",
-    "price_text": "$3.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Sister Schubert's Rolls - Select Varieties, 10-17 oz",
-    "price_text": "$8.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Del Monte Vegetables - 14.5-15.25 oz or Idahoan Instant Potatoes, 4-4.1 oz; Select Varieties",
-    "price_text": "$5.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Brown or Powdered Sugar - 2 lb or Dole Pineapple, 15.25-20 oz; Select Varieties",
-    "price_text": "$4.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "La Terra Fina Quiche - Select Varieties, 23 oz, In the Deli",
-    "price_text": "$9.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "King's Hawaiian Rolls - Select Varieties, 12 ct, In the Bakery",
-    "price_text": "$3.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Swanson Broth - 32 oz or Simple Truth Organic Stock, 32 oz; Select Varieties",
-    "price_text": "$4.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Reser\u2019s Broccoli Cheddar Au Gratin Side - or Other Varieties, 12 oz, In the Deli",
-    "price_text": "$3.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Meiomi or Caymus Conundrum - Select Varieties, 750 ml",
-    "price_text": "$18.97",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Noosa Yoghurt - Select Varieties, 8 oz",
-    "price_text": "$5.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Simple Truth Organic Bone Broth - Select Varieties, 32 oz",
-    "price_text": "$3.79",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Almond Breeze Almondmilk - 64 fl oz or Simple Truth Protein Cottage Cheese, 16 oz; Select Varieties",
-    "price_text": "$2.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Miss Vickie's Kettle Cooked Potato Chips - 6-8 oz or Late July Tortilla Chips, 7.4-10.1 oz; Select Varieties",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Fage Greek Yogurt - Select Varieties, 32 oz",
-    "price_text": "$6.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Simple Truth Breakfast Sausage - Select Varieties, 8-12 oz",
-    "price_text": "$3.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Dannon Oikos Protein Shake - Select Varieties, 12 fl oz",
-    "price_text": "$6.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Flonase Allergy Relief - Select Varieties, 0.20-0.38 fl oz",
-    "price_text": "$16.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Suave Body Wash - Select Varieties, 18 fl oz",
-    "price_text": "$2.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "HD Designs Frosted Jar Candle - Select Varieties, 19 oz",
-    "price_text": "$9.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Hershey's Candy - Select Varieties, 1.4-1.85 oz",
-    "price_text": "$5.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Energizer Max AA or AAA Batteries - Select Varieties, 8 ct",
-    "price_text": "$7.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Goodcook Meal Prep Containers - 10 ct",
-    "price_text": "$11.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "GoodCook Muffin Pan - 12 Cup",
-    "price_text": "$8.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Play-Doh - Select Varieties",
-    "price_text": "$5.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Swedish Fish or Sour Patch Kids Candy - Select Varieties, 7.93-7.97 oz",
-    "price_text": "$6.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Russell Stover Chocolate Bunny - Select Varieties, 3 oz",
-    "price_text": "$2.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kinder Joy Egg - 0.7 oz",
-    "price_text": "$1.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Peeps Chicks - Select Varieties, 5 ct",
-    "price_text": "$5.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Brach's Jelly Beans - 14-14.5 oz or Lifesavers Gummies, 9 oz; Select Varieties",
-    "price_text": "$6.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Russell Stover Chocolate Covered Egg - Select Varieties, 1.3 oz",
-    "price_text": "$5.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Cadbury Mini Eggs - 8-9 oz or Reese's Miniatures, 9.6 oz; Select Varieties",
-    "price_text": "$5.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Bosc or Bartlett Pears - or Granny Smith Apples",
-    "price_text": "$1.79",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kedem Grape Juice - 64 fl oz",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Wonderful Seedless Lemons - 3 lb Bag",
-    "price_text": "$5.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger Russet Potatoes - 5 lb Bag",
-    "price_text": "$2.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Manischewitz Matzo Meal - 16 oz",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Yehuda Matzos - 5 ct",
-    "price_text": "$10.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Gefen Macaroons - Select Varieties, 10 oz",
-    "price_text": "$4.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Manischewitz Mix Matzo - Select Varieties, 4-5 oz",
-    "price_text": "$2.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Yahrzeit Memorial Candle - 2.75 oz",
-    "price_text": "$0.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Kroger 73% Lean Beef Burgers - Frozen, 2 lb",
-    "price_text": "$9.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Litehouse Dressing - Select Varieties, 20 fl oz",
-    "price_text": "$5.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Sargento Shredded Cheese - Select Varieties, 8 oz",
-    "price_text": "$7.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Home Chef Chicken Wings - Bone-In or Boneless, Fully Cooked, Select Varieties, In the Deli",
-    "price_text": "$8.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Private Selection Roman Inspired Pizza - Select Varieties, 20 oz, In the Deli",
-    "price_text": "$10.00",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Chinet Crystal Plastic Plates - 16-24 ct or Cups, 50 ct; Select Varieties",
-    "price_text": "$6.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Tyson Family Pack Frozen Chicken - Select Varieties, 40-64 oz",
-    "price_text": "$12.49",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Miller or Coors - Select Varieties, 30-Pack, 12 fl oz Bottles or Cans",
-    "price_text": "$24.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Toastmaster Air Fryer - 2.6 Quart",
-    "price_text": "$24.99",
-    "category": "shoppable-weekly-deals"
-  },
-  {
-    "name": "Busch Light or Natural Light - Select Varieties, 30-Pack, 12 fl oz Cans",
-    "price_text": "$21.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Red, Orange or Yellow Bell Peppers",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
     "name": "Michelob Ultra - Select Varieties, 24-Pack, 12 fl oz Bottles or Cans",
-    "price_text": "$27.99",
-    "category": "shoppable-weekly-deals"
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Fresh Baked Cookies - Select Varieties, 12 ct, In the Bakery",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Private Selection Angus Beef Patties - Select Varieties, Frozen, 2 lb",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Corona, Modelo or Truly - Select Varieties, 12-Pack, 12 fl oz Bottles or Cans",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Walk-A-Bout Charcoal Grill - Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Hot Dog or Hamburger Buns - Select Varieties, 8 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger or Simple Truth Organic Spices - Select Varieties, 0.13-48 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Sparkling Water - Select Varieties, 12-Pack, 12 fl oz Cans",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Jif Peanut Butter - 15-16 oz or Pillsbury Crescents, 8 ct; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Deer Park Natural Spring Water - 24-Pack, 16.9 fl oz or Private Selection Ice Cream, 48 fl oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Simply Fruit Drink or Ade - 52 fl oz or Pepperidge Farm Goldfish, 4.8-8 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Nabisco Family Size Oreo or Chips Ahoy Cookies - Select Varieties, 8-20 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Crystal Light Drink Mix - 10 ct or French's Yellow Mustard, 20 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Ball Park Buns - 8 ct or Philadelphia Cream Cheese 8 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Prego Pasta Sauce - 24 oz or Suddenly Salad, 7.25-7.75 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Simple Truth Chicken Dinner Sausage - Select Varieties, 16 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Reynolds Wrap Foil - Select Varieties, 37.5-75 sq ft",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Air Wick Essential Oil Refills - Select Varieties, 4 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Ken's Salad Dressing - 16 fl oz or Keebler Sandwich Crackers, 8 ct; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Almond Breeze Almondmilk - 64 fl oz or Planet Oat Oatmilk, 52 fl oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Starbucks Coffee - 10-12 oz Bag or K-Cups, 10 ct; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Pringles - 5.2-5.57 oz or Chex Mix, 7-8 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Goli Supplements - Select Varieties, 60 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Meat & Cheese Party Tray - Select Varieties, 23.5 oz, In the Deli",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Eggo Family Pack Waffles - 24 ct or Kroger Peanut Butter, 64 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Cerave Cleanser - Select Varieties, 12 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Heinz Ketchup - 38 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Simple Truth Natural Turkey Burgers - Frozen, 2 lb",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Method Body Wash - Select Varieties, 18 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Rao's Pasta Sauce - 24 oz or Bertolli Entr\u00e9e, 20-22 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Thomas' English Muffins - 6 ct or Goodles Mac & Cheese, 5.25-6 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Chobani Greek Yogurt - 4 ct or Hostess Multipack, 8.17-14.3 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Betty Crocker Fruit Snacks - 6-10 ct or Little Debbie Mini Muffins, 5 ct; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Dave's Killer Bread Organic Bread - 20.5 oz or Kashi Cereal, 9.5-18 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Bloom Haus Classic Rose Bouquet",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Private Selection Four Layer Cake - Select Varieties, 8\", In the Bakery",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Graduation Decorated Cake - Select Varieties, Quarter Sheet, 24-Hour Notice Appreciated, In the Bakery",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Home Chef Party Size Fried or Baked Chicken - 24-96 Piece, 24-Hour Notice Appreciated, In the Deli",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Graduation Balloons",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "S\u2019MORE BUNDLE - INCLUDES: \u2022 Hershey\u2019s or Reese\u2019s 6-Pack (8.4-9.3 oz) \u2022 Jet-Puffed Marshmallows (12 oz) \u2022 Nabisco Honey Maid Graham Crackers (12.2-14.4 oz)",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Foster Grant Sunglasses - Select Varieties, 1 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Late July Tortilla Chips - Select Varieties, 7.4-10.1 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Everyday Living Kitchen Gadget - Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Waterloo Sparkling Water - Select Varieties, 8-Pack, 12 fl oz Cans",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Nature Made Supplements - Select Varieties, 14-300 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Poise Pads - 36-78 ct or Depend Underwear, 22-32 ct; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Bloom Prebiotic Soda - 12 fl oz or RX Bar, 1.83 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kinder's Seasoning - 4.3-6.4 oz or Simple Truth Protein Tortilla Chips, 5 oz; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "HGTV Outdoor Dining Chair - Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Amylu Chicken Sausage, Meatballs or Burgers - Select Varieties, 8-12 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Fairlife Core Power Protein Shake - Select Varieties, 14 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Olipop Prebiotic Soda - Select Varieties, 12 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Hot Wheels - Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Envy, Pink Lady or Cosmic Crisp Apples",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Cosmic Crisp or Honeycrisp Apples - 3 lb Bag",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Private Selection Sugarbee, Rockit or Wildtwist Apples - 2 lb Bag",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Boneless Ribeye Steak - USDA CHOICE Family Pack",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Wild-Caught Lobster Tails - 3-4 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Potato Salad - or Macaroni Salad or Coleslaw; Select Varieties, 3 lb",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Bloom Haus Day to Remember Bouquet",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Coleslaw or Shredded Lettuce - Select Varieties, 8-16 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Raspberries or Blackberries - 6 oz Package",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Georgia Grown Yellow Peaches",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Apple or Cherry Pie - or Other Varieties, 8\"",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Private Selection Wildflower Honey Turkey Breast - or Colby Cheese, $7.99 lb with Card; Sliced to Order or Grab & Go",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Eastern Seas Scallops - Frozen, 16 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "In Store Made Fruit Bowls - 62 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Private Selection Angus 80% Lean Ground Chuck - 16 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Kroger Extra Large Cooked Shrimp - 26-30 ct, Sold in a 2 lb Bag for $17.98",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Zespri Sungold Kiwi - 1 lb Package",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Black Box - 3 Liter or Franzia, 5 Liter; Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Heineken or Sierra Nevada - Select Varieties, 12-Pack, 12 fl oz Bottles or Cans",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Stella Rosa or XXL - Select Varieties, 750 ml",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Creature Comforts, Samuel Adams or Leinenkugel's - Select Varieties, 12-Pack, 12 fl oz Bottles or Cans",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Busch Light, Natural Light or Miller High Life - Select Varieties, 30-Pack, 12 fl oz Cans",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
     "name": "La Marca - Select Varieties, 750 ml",
-    "price_text": "$14.97",
-    "category": "shoppable-weekly-deals"
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Sierra Nevada, New Belgium or Creature Comforts - Select Varieties, 12-Pack, 12 fl oz Bottles or Cans",
-    "price_text": "$18.99",
-    "category": "shoppable-weekly-deals"
+    "name": "Huy Fong Sriracha - 28 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Coppola Diamond Claret or Oyster Bay - Select Varieties, 750 ml",
-    "price_text": "$11.69",
-    "category": "shoppable-weekly-deals"
+    "name": "Thai Kitchen Coconut Milk - Select Varieties, 13.66 fl oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   },
   {
-    "name": "Kim Crawford, Kendall Jackson or Korbel - Select Varieties, 750 ml",
-    "price_text": "$13.97",
-    "category": "shoppable-weekly-deals"
+    "name": "Panda Express Sauce - Select Varieties, 14.9-20.75 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "StarKist Tuna - Select Varieties, 4.5-5 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Asian Pears",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Poke Bowl - Select Varieties, 4-14.2 oz, Available in Select Stores, In the Deli",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Private Selection Duroc Ground Pork - 16 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Maxx Bubbles Bubble Blaster or Fruit Blower - Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Patriotic Paper Dinnerware, Flip Flops, Pinwheels & Party D\u00e9cor - Select Varieties",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "M&M's Party Size Candy - Select Varieties, 34-38 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Ghirardelli Chocolate Squares - Select Varieties, 5-5.32 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Igloo Cooler - 50 qt",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Werther's Original or Riesen Candy - Select Varieties, 5.5 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Char-Griller Pro Deluxe Charcoal Grill",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Crayola Sidewalk Chalk - 48 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Tootsie Candy - Select Varieties, 10.12-15 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Mars Fun Size Candy - Select Varieties, 5 ct",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Sour Strips Bites Candy - Select Varieties, 6.35 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
+  },
+  {
+    "name": "Lifesavers or Skittles Gummy Candy - Select Varieties, 5.8-7 oz",
+    "price_text": "N/A",
+    "category": "digital-ad-offer"
   }
 ]
