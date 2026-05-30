@@ -316,6 +316,11 @@ def main() -> int:
     parser.add_argument("--search-mode", choices=("fixture", "web", "playwright"), default="fixture")
     parser.add_argument("--web-max-links", type=int, default=20)
     parser.add_argument("--web-fallback-to-fixture", action="store_true")
+    parser.add_argument(
+        "--brave-api-key",
+        default=None,
+        help="Brave Search API key for recipe link discovery (env: BRAVE_API_KEY)",
+    )
     parser.add_argument("--target-count", type=int, default=10)
     parser.add_argument("--planner-config", default="config/planner_config.json")
     parser.add_argument(
@@ -335,6 +340,9 @@ def main() -> int:
     parser.add_argument("--quality-min-meals", type=int, default=None)
     parser.add_argument("--quality-min-trusted-ratio", type=float, default=None)
     args = parser.parse_args()
+    brave_api_key = args.brave_api_key or os.environ.get("BRAVE_API_KEY") or None
+    if brave_api_key:
+        brave_api_key = brave_api_key.strip() or None
     kroger_circular_id = args.kroger_circular_id or os.environ.get("KROGER_CIRCULAR_ID") or None
     if kroger_circular_id:
         kroger_circular_id = kroger_circular_id.strip() or None
@@ -521,16 +529,18 @@ def main() -> int:
     )
     if args.search_mode == "web":
         recipe_adapter = WebRecipeSearchAdapter(
-            config=WebSearchConfig(max_links=args.web_max_links),
+            config=WebSearchConfig(max_links=args.web_max_links, brave_api_key=brave_api_key),
             fetch_text=recipe_fetch_wrapper,
         )
-        progress(f"Recipe search mode: web (max_links={args.web_max_links})")
+        search_backend = "brave" if brave_api_key else "bing-rss"
+        progress(f"Recipe search mode: web (max_links={args.web_max_links}, backend={search_backend})")
     elif args.search_mode == "playwright":
         recipe_adapter = PlaywrightRecipeSearchAdapter(
-            config=WebSearchConfig(max_links=args.web_max_links),
+            config=WebSearchConfig(max_links=args.web_max_links, brave_api_key=brave_api_key),
             fetch_text=recipe_fetch_wrapper,
         )
-        progress(f"Recipe search mode: playwright (max_links={args.web_max_links})")
+        search_backend = "brave" if brave_api_key else "bing-rss"
+        progress(f"Recipe search mode: playwright (max_links={args.web_max_links}, backend={search_backend})")
     else:
         recipe_adapter = JsonFixtureRecipeSearchAdapter(args.recipe_fixture)
         progress("Recipe search mode: fixture")

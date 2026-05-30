@@ -406,6 +406,7 @@ class WebSearchConfig:
     random_domain_count: int = 7
     max_query_anchors: int = 5
     use_relaxed_query_fallback: bool = True
+    brave_api_key: str | None = None
     trusted_domains: tuple[str, ...] = (
         "allrecipes.com",
         "foodnetwork.com",
@@ -520,7 +521,43 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         self.last_stats["rejected_path"] = int(self.last_stats["rejected_path"]) + 1
         return False
 
-    def _search_links(self, query: str, *, max_links: int, domain_filter: str | None = None) -> list[str]:
+    def _search_links_brave(self, query: str, *, max_links: int, domain_filter: str | None = None) -> list[str]:
+        self.last_stats["rss_queries"] = int(self.last_stats["rss_queries"]) + 1
+        api_url = f"https://api.search.brave.com/res/v1/web/search?q={quote_plus(query)}&count=20"
+        request = Request(
+            api_url,
+            headers={
+                "Accept": "application/json",
+                "Accept-Encoding": "identity",
+                "X-Subscription-Token": self._config.brave_api_key or "",
+            },
+        )
+        try:
+            with urlopen(request, timeout=12) as response:  # noqa: S310
+                body = response.read().decode("utf-8", errors="ignore")
+        except HTTPError as error:
+            self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
+            if int(error.code) == 403:
+                self.last_stats["pages_failed_403"] = int(self.last_stats["pages_failed_403"]) + 1
+            return []
+        except (TimeoutError, URLError):
+            self.last_stats["pages_failed_timeout"] = int(self.last_stats["pages_failed_timeout"]) + 1
+            return []
+        except Exception:
+            self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
+            return []
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError:
+            return []
+        results = (data.get("web") or {}).get("results") or []
+        raw_links = [str(item.get("url") or "") for item in results if item.get("url")]
+        self.last_stats["raw_links"] = int(self.last_stats["raw_links"]) + len(raw_links)
+        gated = [link for link in raw_links if self._is_allowed_link(link, domain_filter=domain_filter)]
+        self.last_stats["allowed_links"] = int(self.last_stats["allowed_links"]) + len(gated)
+        return gated[:max_links]
+
+    def _search_links_bing(self, query: str, *, max_links: int, domain_filter: str | None = None) -> list[str]:
         self.last_stats["rss_queries"] = int(self.last_stats["rss_queries"]) + 1
         url = f"https://www.bing.com/search?format=rss&q={quote_plus(query)}"
         try:
@@ -541,6 +578,11 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         gated = [link for link in links if self._is_allowed_link(link, domain_filter=domain_filter)]
         self.last_stats["allowed_links"] = int(self.last_stats["allowed_links"]) + len(gated)
         return gated[:max_links]
+
+    def _search_links(self, query: str, *, max_links: int, domain_filter: str | None = None) -> list[str]:
+        if self._config.brave_api_key:
+            return self._search_links_brave(query, max_links=max_links, domain_filter=domain_filter)
+        return self._search_links_bing(query, max_links=max_links, domain_filter=domain_filter)
 
     def _parse_recipe_page(self, url: str) -> RecipeDocument | None:
         self.last_stats["pages_fetched"] = int(self.last_stats["pages_fetched"]) + 1
@@ -660,29 +702,12 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
                 if len(links) >= self._config.max_links:
                     break
 
-        # Final permissive pass: if Bing results do not include any allowed links, try parsing
-        # JSON-LD from whatever pages are returned. JSON-LD parsing still enforces Recipe + rating.
+        # Final permissive pass: drop the site: constraint and search broadly.
+        # Results are still gated to trusted domains/paths by _search_links/_is_allowed_link.
         if not links:
             anchor_text = " ".join(query_anchors[:3]) if query_anchors else "easy dinner"
-            # Permissive query without strict site constraint; still expects Recipe JSON-LD on destination pages.
             permissive_query = f"{anchor_text} easy recipe"
-            self.last_stats["rss_queries"] = int(self.last_stats["rss_queries"]) + 1
-            url = f"https://www.bing.com/search?format=rss&q={quote_plus(permissive_query)}"
-            try:
-                xml = self._fetch_text(url)
-            except (HTTPError, TimeoutError, URLError):
-                xml = ""
-                self.last_stats["pages_failed_timeout"] = int(self.last_stats["pages_failed_timeout"]) + 1
-            except Exception:
-                xml = ""
-                self.last_stats["pages_failed_http"] = int(self.last_stats["pages_failed_http"]) + 1
-            raw_links = _extract_rss_links(xml) if xml else []
-            self.last_stats["raw_links"] = int(self.last_stats["raw_links"]) + len(raw_links)
-            # Still gate to trusted domains/paths to reduce noise and avoid fetching pages
-            # that never contain Recipe JSON-LD.
-            gated = [link for link in raw_links if self._is_allowed_link(link)]
-            self.last_stats["allowed_links"] = int(self.last_stats["allowed_links"]) + len(gated)
-            links = gated[: self._config.max_links]
+            links = self._search_links(permissive_query, max_links=self._config.max_links)
 
         docs: list[RecipeDocument] = []
         for link in links:
