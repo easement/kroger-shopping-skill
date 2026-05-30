@@ -5,6 +5,12 @@ import json
 import os
 from pathlib import Path
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from scripts.ad_capture import SaleItem
 from scripts.recipe_coverage import coverage_recipe_docs
 from scripts.recipe_search import RecipeDocument

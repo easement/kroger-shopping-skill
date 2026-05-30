@@ -407,6 +407,12 @@ class WebSearchConfig:
     max_query_anchors: int = 5
     use_relaxed_query_fallback: bool = True
     brave_api_key: str | None = None
+    healthy_domains: tuple[str, ...] = (
+        "eatingwell.com",
+        "skinnytaste.com",
+        "minimalistbaker.com",
+        "cookieandkate.com",
+    )
     trusted_domains: tuple[str, ...] = (
         "allrecipes.com",
         "foodnetwork.com",
@@ -490,16 +496,19 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
     def _build_query_for_domain(self, sale_items: tuple[SaleItem, ...], domain: str) -> str:
         anchors = self._pick_query_anchors(sale_items, max_anchors=1)
         anchor_text = anchors[0] if anchors else "chicken"
-        # Keep query syntax simple so Bing RSS reliably returns results from the targeted domain.
         return f"site:{domain} {anchor_text} recipe"
 
-    def _build_query_for_anchor_and_domain(self, anchor: str, domain: str) -> str:
-        return f"site:{domain} {anchor} recipe"
+    def _build_query_for_anchor_and_domain(self, anchor: str, domain: str, *, healthy: bool = False) -> str:
+        prefix = "healthy " if healthy else ""
+        return f"site:{domain} {prefix}{anchor} recipe"
 
     def _build_relaxed_query_for_domain(self, sale_items: tuple[SaleItem, ...], domain: str) -> str:
         anchors = self._pick_query_anchors(sale_items, max_anchors=1)
         anchor_text = anchors[0] if anchors else "chicken"
         return f"site:{domain} {anchor_text} recipe"
+
+    def _is_healthy_domain(self, domain: str) -> bool:
+        return domain.lower() in set(self._config.healthy_domains)
 
     def _is_allowed_link(self, link: str, *, domain_filter: str | None = None) -> bool:
         parsed = urlparse(link)
@@ -647,10 +656,18 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
     def search(self, sale_items: tuple[SaleItem, ...]) -> list[RecipeDocument]:
         all_domains = list(self._config.trusted_domains)
         domain_count = max(1, int(self._config.random_domain_count))
+        healthy_domain_set = set(self._config.healthy_domains)
+
+        # Healthy domains are always included so the healthy section has candidates to work with.
+        always_include = [d for d in self._config.healthy_domains if d in set(all_domains)]
+        non_healthy = [d for d in all_domains if d not in healthy_domain_set]
+
         if len(all_domains) <= domain_count:
             selected_domains = all_domains
         else:
-            selected_domains = random.sample(all_domains, domain_count)
+            remaining_slots = max(0, domain_count - len(always_include))
+            random_extra = random.sample(non_healthy, min(remaining_slots, len(non_healthy)))
+            selected_domains = always_include + random_extra
 
         self.last_stats = {
             "used_relaxed_query": False,
@@ -676,13 +693,14 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
             max_anchors=max(1, int(self._config.max_query_anchors)),
         )
 
-        # Strict per-domain pass
+        # Strict per-domain pass. Healthy domains use "healthy {anchor} recipe" queries.
         for domain in selected_domains:
+            is_healthy = self._is_healthy_domain(domain)
             for anchor in query_anchors:
                 remaining = self._config.max_links - len(links)
                 if remaining <= 0:
                     break
-                query = self._build_query_for_anchor_and_domain(anchor, domain)
+                query = self._build_query_for_anchor_and_domain(anchor, domain, healthy=is_healthy)
                 links.extend(self._search_links(query, max_links=remaining, domain_filter=domain))
             if len(links) >= self._config.max_links:
                 break
@@ -691,11 +709,12 @@ class WebRecipeSearchAdapter(RecipeSearchAdapter):
         if not links and self._config.use_relaxed_query_fallback:
             self.last_stats["used_relaxed_query"] = True
             for domain in selected_domains:
+                is_healthy = self._is_healthy_domain(domain)
                 for anchor in query_anchors:
                     remaining = self._config.max_links - len(links)
                     if remaining <= 0:
                         break
-                    relaxed_query = self._build_query_for_anchor_and_domain(anchor, domain)
+                    relaxed_query = self._build_query_for_anchor_and_domain(anchor, domain, healthy=is_healthy)
                     links.extend(
                         self._search_links(relaxed_query, max_links=remaining, domain_filter=domain)
                     )

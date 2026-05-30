@@ -12,6 +12,7 @@ from scripts.menu_planner import (
     PlannerConfig,
     PlanningDiagnostics,
     RankedRecipe,
+    plan_healthy_section,
     plan_weekly_menu_with_diagnostics,
 )
 from scripts.recipe_search import (
@@ -28,6 +29,7 @@ class PipelineResult:
     ad_context: AdCaptureResult
     used_manual_fallback: bool
     diagnostics: PlanningDiagnostics | None = None
+    healthy_meals: tuple[RankedRecipe, ...] = ()
 
 
 def _fail_if_no_usable_sale_items(ad_context: AdCaptureResult) -> AdCaptureResult:
@@ -96,11 +98,18 @@ def run_menu_pipeline(
         target_count=target_count,
         config=planner_config,
     )
+    selected_urls = {entry.candidate.url for entry in planned}
+    healthy = plan_healthy_section(
+        candidates=candidates,
+        exclude_urls=selected_urls,
+        config=planner_config,
+    )
     return PipelineResult(
         meals=tuple(planned),
         ad_context=ad_context,
         used_manual_fallback=used_manual_fallback,
         diagnostics=diagnostics,
+        healthy_meals=tuple(healthy),
     )
 
 
@@ -145,10 +154,17 @@ def run_menu_pipeline_with_search(
         target_count=target_count,
         config=planner_config,
     )
+    selected_urls = {entry.candidate.url for entry in planned}
+    healthy = plan_healthy_section(
+        candidates=candidates,
+        exclude_urls=selected_urls,
+        config=planner_config,
+    )
 
     return PipelineResult(
         meals=tuple(planned),
         ad_context=ad_context,
         used_manual_fallback=used_manual_fallback,
         diagnostics=diagnostics,
+        healthy_meals=tuple(healthy),
     )

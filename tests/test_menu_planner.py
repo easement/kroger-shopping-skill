@@ -1,10 +1,12 @@
 import unittest
 
 from scripts.menu_planner import (
+    HEALTHY_SOURCES,
     SERIOUS_EATS_BASE_SCORE,
     PlannerConfig,
     RecipeCandidate,
     check_eligibility,
+    plan_healthy_section,
     plan_weekly_menu,
     plan_weekly_menu_with_diagnostics,
     score_candidate,
@@ -247,6 +249,89 @@ class MenuPlannerTests(unittest.TestCase):
         )
         non_fn_count = len([item for item in result if item.candidate.source_domain != "foodnetwork.com"])
         self.assertGreaterEqual(non_fn_count, 4)
+
+
+class HealthySectionTests(unittest.TestCase):
+    def _make_healthy_candidate(self, idx: int, **kwargs: object) -> RecipeCandidate:
+        domain = next(iter(HEALTHY_SOURCES))
+        kwargs.setdefault("cuisine", "American")
+        kwargs.setdefault("protein", "chicken")
+        return RecipeCandidate(
+            title=f"Healthy Meal {idx}",
+            url=f"https://{domain}/recipe/meal-{idx}",
+            source_domain=domain,
+            cuisine=str(kwargs.pop("cuisine")),
+            protein=str(kwargs.pop("protein")),
+            ingredients=("chicken breast", "spinach", "olive oil"),
+            rating=4.5,
+            vote_count=200,
+            prep_minutes=30,
+            healthy=True,
+            sale_item_matches=("chicken",),
+        )
+
+    def test_healthy_section_only_includes_healthy_source_domains(self) -> None:
+        healthy = [self._make_healthy_candidate(i) for i in range(1, 4)]
+        regular = [make_candidate(idx=50 + i, cuisine="Italian", protein="beef") for i in range(3)]
+        result = plan_healthy_section(candidates=healthy + regular, exclude_urls=set())
+        domains = {item.candidate.source_domain for item in result}
+        self.assertTrue(domains.issubset(HEALTHY_SOURCES))
+
+    def test_healthy_section_excludes_already_selected_urls(self) -> None:
+        candidates = [self._make_healthy_candidate(i) for i in range(1, 6)]
+        exclude = {candidates[0].url, candidates[1].url}
+        result = plan_healthy_section(candidates=candidates, exclude_urls=exclude)
+        result_urls = {item.candidate.url for item in result}
+        self.assertTrue(result_urls.isdisjoint(exclude))
+
+    def test_healthy_section_caps_at_target(self) -> None:
+        candidates = [
+            self._make_healthy_candidate(i, protein=("chicken" if i % 3 == 0 else "beef" if i % 3 == 1 else "pork"))
+            for i in range(1, 12)
+        ]
+        result = plan_healthy_section(candidates=candidates, exclude_urls=set(), target=5)
+        self.assertLessEqual(len(result), 5)
+
+    def test_healthy_section_applies_sale_item_match_filter(self) -> None:
+        no_match = [
+            RecipeCandidate(
+                title=f"No Match {i}",
+                url=f"https://eatingwell.com/recipe/no-match-{i}",
+                source_domain="eatingwell.com",
+                cuisine="American",
+                protein="chicken",
+                ingredients=("chicken",),
+                rating=4.5,
+                vote_count=100,
+                prep_minutes=30,
+                healthy=True,
+                sale_item_matches=(),
+            )
+            for i in range(3)
+        ]
+        result = plan_healthy_section(candidates=no_match, exclude_urls=set())
+        self.assertEqual(len(result), 0)
+
+    def test_healthy_section_soft_protein_cap_of_two(self) -> None:
+        candidates = [
+            RecipeCandidate(
+                title=f"Chicken {i}",
+                url=f"https://eatingwell.com/recipe/chicken-{i}",
+                source_domain="eatingwell.com",
+                cuisine="American",
+                protein="chicken",
+                ingredients=("chicken breast",),
+                rating=4.5,
+                vote_count=200,
+                prep_minutes=25,
+                healthy=True,
+                sale_item_matches=("chicken",),
+            )
+            for i in range(6)
+        ]
+        result = plan_healthy_section(candidates=candidates, exclude_urls=set(), target=5)
+        chicken_count = sum(1 for item in result if item.candidate.protein == "chicken")
+        self.assertLessEqual(chicken_count, 2)
 
 
 class SeriousEatsTests(unittest.TestCase):

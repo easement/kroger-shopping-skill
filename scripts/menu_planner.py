@@ -32,6 +32,13 @@ EXCLUDED_CUISINE_TOKENS = {
 SERIOUS_EATS_DOMAIN = "seriouseats.com"
 SERIOUS_EATS_BASE_SCORE = 3.0
 
+HEALTHY_SOURCES = {
+    "eatingwell.com",
+    "skinnytaste.com",
+    "minimalistbaker.com",
+    "cookieandkate.com",
+}
+
 TRUSTED_SOURCES = {
     "allrecipes.com",
     "foodnetwork.com",
@@ -383,4 +390,35 @@ def plan_weekly_menu_with_diagnostics(
 
 def plan_weekly_menu(candidates: list[RecipeCandidate], target_count: int = 10) -> list[RankedRecipe]:
     selected, _ = plan_weekly_menu_with_diagnostics(candidates=candidates, target_count=target_count)
+    return selected
+
+
+def plan_healthy_section(
+    candidates: list[RecipeCandidate],
+    exclude_urls: set[str],
+    target: int = 5,
+    config: PlannerConfig | None = None,
+) -> list[RankedRecipe]:
+    active_config = config or PlannerConfig()
+    healthy_candidates = [
+        c for c in candidates
+        if _normalize(c.source_domain) in HEALTHY_SOURCES
+        and c.url not in exclude_urls
+    ]
+    eligible = [c for c in healthy_candidates if check_eligibility(c, active_config).eligible]
+    ranked = _sort_ranked([score_candidate(c) for c in eligible])
+
+    selected: list[RankedRecipe] = []
+    by_protein: dict[str, int] = {}
+    max_per_protein = 2
+
+    for entry in ranked:
+        if len(selected) >= target:
+            break
+        protein_key = _normalize(entry.candidate.protein)
+        if by_protein.get(protein_key, 0) >= max_per_protein:
+            continue
+        selected.append(entry)
+        by_protein[protein_key] = by_protein.get(protein_key, 0) + 1
+
     return selected
