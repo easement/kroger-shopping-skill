@@ -12,6 +12,18 @@ Generate a weekly set of 10 healthy/easy meals from Kroger sale context with div
 - Keeps curated quick-recipe coverage for recurring sale proteins like ground beef, shrimp, pork shoulder, ribs, sausage, and chicken wings
 - Produces JSON, plain meal lines, or markdown meal links
 
+## Environment Variables
+
+Copy `.env.example` to `.env` (which is gitignored) and fill in your values. Variables can also be passed as CLI flags.
+
+| Variable | CLI flag | Required | Description |
+|---|---|---|---|
+| `BRAVE_API_KEY` | `--brave-api-key` | No | [Brave Search API](https://api.search.brave.com) key. Free tier: 2,000 queries/month. Without a key, recipe search falls back to Bing RSS. |
+| `KROGER_COOKIE` | `--kroger-cookie` | For live ads | Raw `Cookie` header from browser DevTools while logged into kroger.com. |
+| `KROGER_CIRCULAR_ID` | `--kroger-circular-id` | No | Weekly circular UUID; auto-detected when absent. |
+| `KROGER_BROWSER_PROFILE_DIR` | `--kroger-browser-profile-dir` | No | Persistent Chromium profile path for session-assisted Kroger capture. |
+| `KROGER_BROWSER_CHANNEL` | `--kroger-browser-channel` | No | Playwright browser channel, e.g. `chrome`. |
+
 ## Setup
 
 From `grocery-weekly-menu-skill/`:
@@ -44,10 +56,10 @@ python3 -m scripts.run_weekly_plan \
   --output-format meal-markdown
 ```
 
-Refresh recipe coverage when you want to rotate or expand the live recipe fixture:
+Refresh recipe coverage when you want to rotate or expand the live recipe fixture (set `BRAVE_API_KEY` in your environment for reliable recipe discovery):
 
 ```bash
-python3 -m scripts.refresh_live_recipes_fixture \
+BRAVE_API_KEY=your_key python3 -m scripts.refresh_live_recipes_fixture \
   --mode playwright \
   --target-count 100 \
   --allow-shortfall

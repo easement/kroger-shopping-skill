@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from scripts.ad_capture import SaleItem
@@ -182,7 +183,15 @@ def main() -> int:
     parser.add_argument("--target-count", type=int, default=100)
     parser.add_argument("--max-links", type=int, default=300)
     parser.add_argument("--allow-shortfall", action="store_true")
+    parser.add_argument(
+        "--brave-api-key",
+        default=None,
+        help="Brave Search API key for recipe link discovery (env: BRAVE_API_KEY)",
+    )
     args = parser.parse_args()
+    brave_api_key = args.brave_api_key or os.environ.get("BRAVE_API_KEY") or None
+    if brave_api_key:
+        brave_api_key = brave_api_key.strip() or None
 
     output_path = Path(args.output)
     last_week_path = Path(args.last_week)
@@ -200,7 +209,7 @@ def main() -> int:
         all_docs.append(doc)
     stats_by_batch: list[dict[str, object] | None] = []
     for seed_batch in _seed_sale_item_batches():
-        config = WebSearchConfig(max_links=args.max_links)
+        config = WebSearchConfig(max_links=args.max_links, brave_api_key=brave_api_key)
         adapter = (
             PlaywrightRecipeSearchAdapter(config=config)
             if args.mode == "playwright"
